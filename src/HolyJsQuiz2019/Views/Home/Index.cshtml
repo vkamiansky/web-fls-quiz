@@ -1,0 +1,21 @@
+﻿<!-- ko if: isIntroActive -->
+<!-- ko component: { name: "intro", params: { showTest: showTest } } --><!-- /ko -->
+<!-- /ko -->
+<!-- ko if: isTestActive -->
+<!-- ko component: { name: "test", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showSubmit: showSubmit, showIntro: showIntro, addUserAnswer: addUserAnswer } } --><!-- /ko -->
+<!-- /ko -->
+<!-- ko if: isSubmitActive -->
+<!-- ko component: { name: "submit", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showFinish: showFinish } } --><!-- /ko -->
+<!-- /ko -->
+<!-- ko if: isFinishActive -->
+<!-- ko component: { name: "finish" } --><!-- /ko -->
+<!-- /ko -->
+
+<div id="modalError" class="modal">
+    <h3>&nbsp;</h3>
+    <h2 data-bind="text: modalErrorMessage"></h2>
+</div>
+
+<div class="loading blocker" data-bind="visible: loading">
+    Loading...
+</div>

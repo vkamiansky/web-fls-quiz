@@ -1,0 +1,24 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <title>FLS HolyJS Quiz!</title>
+    <link rel="stylesheet" href="~/content/css/jquery.modal.min.css" />
+    <link rel="stylesheet" href="~/content/css/styles.css?q=22" />
+    <link rel="stylesheet" href="~/content/css/font-arimo.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <a target="_blank" rel="noopener noreferrer" href="/"><div class="logo-img"></div></a>
+        </div>
+        <div id="quiz-app" class="content">
+            @RenderBody()
+        </div>
+    </div>
+    <script src="~/scripts/vendor/require.min.js"></script>
+    <script src="~/scripts/apps/quiz/components/components-bundle.js?q=22"></script>
+    <script src="~/scripts/apps/quiz/quiz.config.js"></script>
+</body>
+</html>

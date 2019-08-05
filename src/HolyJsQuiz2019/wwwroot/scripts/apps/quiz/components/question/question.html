@@ -1,0 +1,18 @@
+﻿<div class="polls-form">
+    <!-- ko if: text.length -->
+        <div class="polls-form-header">
+            <h2 data-bind="text: text"></h2>
+        </div>
+    <!-- /ko -->
+
+    <div class="polls-form-content indent-all">
+        <div class="polls-img-container"><img class="polls-img" alt="img" data-bind="attr: {src: 'data:image/png;base64,' + imageBase64, alt: currentQuestionNumber() }"></div>
+        <div class="polls-counter"><span class="current" data-bind="text: currentQuestionNumber"></span> из <span data-bind="text: countOfQuestions"></span></div>
+        <ul class="polls-ul" data-bind="foreach: {data: answers, as: 'answer'}">
+            <li class="polls-li"><input type="radio" data-bind="value: answer.answerId, checked: $parent.selectedAnswerId, attr: {id: 'poll_' + answer.answerId}" /><label data-bind="attr: {for: 'poll_' + answer.answerId}, text: answer.text"></label></li>
+        </ul>
+        <div class="polls-buttons">
+            <input readonly class="form-button" onfocus="this.blur()" value="Продолжить" data-bind="enable: selectedAnswerId, click: answerButtonClick" />
+        </div>
+    </div>
+</div>
