@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebFlsQuiz", "web-fls-quiz\WebFlsQuiz.csproj", "{DBED2C83-4B1C-450E-8DA1-852727EB2C36}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DBED2C83-4B1C-450E-8DA1-852727EB2C36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBED2C83-4B1C-450E-8DA1-852727EB2C36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBED2C83-4B1C-450E-8DA1-852727EB2C36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBED2C83-4B1C-450E-8DA1-852727EB2C36}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5B222DFF-50F2-4EF6-B545-54AB016DA4B8}
+	EndGlobalSection
+EndGlobal
