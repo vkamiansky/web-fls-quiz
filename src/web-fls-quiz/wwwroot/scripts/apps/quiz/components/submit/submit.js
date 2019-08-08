@@ -1,4 +1,4 @@
-﻿define([
+﻿define('apps/quiz/components/submit/submit', [
         'knockout',
         'jquery',
         'knockout.validation'

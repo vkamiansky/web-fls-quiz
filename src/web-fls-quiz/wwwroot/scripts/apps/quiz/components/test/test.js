@@ -1,4 +1,4 @@
-﻿define([
+﻿define('apps/quiz/components/test/test', [
         'knockout',
         'jquery',
         'json!/settings/quizOptions'

@@ -1,4 +1,4 @@
-﻿define([],
+﻿define('apps/quiz/components/intro/intro', [],
     function() {
         'use strict';
 
