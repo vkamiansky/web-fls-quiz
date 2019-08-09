@@ -8,5 +8,6 @@ namespace WebFlsQuiz.Interfaces
         QuestionData GetQuestion(int id);
         Quiz GetQuiz(string quizName);
         IQueryable<int> GetQuestionIds(int quizId);
+        void InsertQuizResult(QuizResult quizResult);
     }
 }

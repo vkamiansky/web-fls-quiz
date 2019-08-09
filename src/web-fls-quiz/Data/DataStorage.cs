@@ -15,6 +15,9 @@ namespace WebFlsQuiz.Data
         private IMongoCollection<Quiz> _quizzes =>
             _database.GetCollection<Quiz>("Quizzes");
 
+        private IMongoCollection<QuizResult> _quizResults =>
+            _database.GetCollection<QuizResult>("QuizResults");
+
         public DataStorage(IConfigurationService configuration)
         {
             var client = new MongoClient(configuration.GetDbConnectionString().Result);
@@ -43,6 +46,12 @@ namespace WebFlsQuiz.Data
                 .AsQueryable()
                 .Where(x => string.Equals(x.Name, quizName))
                 .FirstOrDefault();
+        }
+
+        public void InsertQuizResult(QuizResult quizResult)
+        {
+            _quizResults
+                .InsertOne(quizResult);
         }
     }
 }

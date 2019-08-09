@@ -19,6 +19,7 @@
             self.userAnswers = params && params.userAnswers || [];
             self.showFinish = params && params.showFinish;
             self.showModalErrorMessage = params && params.showModalErrorMessage;
+            self.quizId = params && params.quizId;
 
             self.isReadyForSubmit = ko.pureComputed(_isReadyForSubmit.bind(self));
 
@@ -81,7 +82,8 @@
                         email: self.email(),
                         name: self.name(),
                         comment: self.comment(),
-                        userAnswers: self.userAnswers()
+                        userAnswers: self.userAnswers(),
+                        quizId: self.quizId
                     },
                     function _onSuccess(response) {
                         if (response.hasErrors) {
