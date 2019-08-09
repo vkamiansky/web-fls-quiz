@@ -1,6 +1,5 @@
 ﻿using WebFlsQuiz.Interfaces;
 using WebFlsQuiz.Models;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Linq;
 
@@ -12,6 +11,9 @@ namespace WebFlsQuiz.Data
 
         private IMongoCollection<QuestionData> _questions =>
             _database.GetCollection<QuestionData>("Questions");
+
+        private IMongoCollection<Quiz> _quizzes =>
+            _database.GetCollection<Quiz>("Quizzes");
 
         public DataStorage(IConfigurationService configuration)
         {
@@ -27,9 +29,20 @@ namespace WebFlsQuiz.Data
                 .First();
         }
 
-        public long GetQuestionsNumber()
+        public IQueryable<int> GetQuestionIds(int quizId)
         {
-            return _questions.CountDocuments(new BsonDocument());
+            return _questions
+                .AsQueryable()
+                .Where(x => x.QuizId == quizId)
+                .Select(x => x.Id);
+        }
+
+        public Quiz GetQuiz(string quizName)
+        {
+            return _quizzes
+                .AsQueryable()
+                .Where(x => string.Equals(x.Name, quizName))
+                .FirstOrDefault();
         }
     }
 }

@@ -18,6 +18,7 @@
             self.showIntro = params && params.showIntro;
             self.addUserAnswer = params && params.addUserAnswer;
             self.showModalErrorMessage = params && params.showModalErrorMessage;
+            self.quizId = params && params.quizId;
 
             self.currentQuestion = ko.observable();
             self.currentQuestionNumber = ko.observable(0);
@@ -53,7 +54,8 @@
             self.loading(true);
             $.post('/question/getRandom',
                     {
-                        excludedQuestionsIds: self.userAnswers().map(_mapQuestionId)
+                        excludedQuestionsIds: self.userAnswers().map(_mapQuestionId),
+                        quizId: self.quizId
                     },
                     function _onSuccess(result) {
                         if (!result || !result.question) {

@@ -18,9 +18,9 @@ namespace WebFlsQuiz.Controllers
         }
 
         [HttpPost]
-        public string GetRandom(int[] excludedQuestionsIds)
+        public string GetRandom(int[] excludedQuestionsIds, int quizId)
         {
-            var question = _QuestionService.GetRandom(excludedQuestionsIds);
+            var question = _QuestionService.GetRandom(excludedQuestionsIds, quizId);
 
             return JsonConvert.SerializeObject(
                 new {

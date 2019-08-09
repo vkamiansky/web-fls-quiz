@@ -16,9 +16,9 @@ namespace WebFlsQuiz.Services
             _dataStorage = dataStorage;
         }
         
-        public Question GetRandom(int[] excludedQuestionIds)
+        public Question GetRandom(int[] excludedQuestionIds, int quizId)
         {
-            var availableIds = Enumerable.Range(1, (int)_dataStorage.GetQuestionsNumber()).Except(excludedQuestionIds).ToArray();
+            var availableIds = _dataStorage.GetQuestionIds(quizId).ToList().Except(excludedQuestionIds).ToArray();
             var nextQuestionIdPosition = _random.Next(0, availableIds.Length);
             var questionData = _dataStorage.GetQuestion(availableIds[nextQuestionIdPosition]);
             return new Question

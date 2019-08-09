@@ -2,10 +2,7 @@
     <div class="bg-colored indent-all">
         <h2 class="centered-h">Приветствуем вас в нашем космическом пространстве!</h2>
         <div class="felix"></div>
-        <p class="centered-h content-felix">
-            Впереди вас ждут вопросы из вселенных .NET, C# и программирования в целом, а по итогам – подарок от компании. Чем больше правильных ответов, тем приятнее приз :) Для поиска верных ответов можно пользоваться чем угодно, ведь самое главное - это верный ответ.<br>
-            Ну что, стартуем!?
-        </p>
+        <p class="centered-h content-felix" data-bind="text: quizGreeting"></p>
         <div class="centered-h">
             <input readonly class="form-button" data-bind="click: startTestButtonClick" onfocus="this.blur()" value="Начать" />
         </div>
