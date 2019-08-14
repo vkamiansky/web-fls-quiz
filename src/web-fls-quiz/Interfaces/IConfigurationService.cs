@@ -14,5 +14,8 @@ namespace WebFlsQuiz.Interfaces
         Task<string> GetDbConnectionString();
         Task<string> GetDbName();
         Task<string> GetIsConfigured();
+        bool CheckToken(string secretToken);
+        string SetToken(string secretToken);
+        bool ConfirmToken(string confirmCode);
     }
 }

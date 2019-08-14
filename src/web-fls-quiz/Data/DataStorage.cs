@@ -13,6 +13,9 @@ namespace WebFlsQuiz.Data
         private IMongoCollection<QuestionData> _questions =>
             _database.GetCollection<QuestionData>("Questions");
 
+        private IMongoCollection<string> _confirmCodes =>
+            _database.GetCollection<string>("ConfirmCodes");
+
         public DataStorage(IConfigurationService configuration)
         {
             var client = new MongoClient(configuration.GetDbConnectionString().Result);
@@ -30,6 +33,22 @@ namespace WebFlsQuiz.Data
         public long GetQuestionsNumber()
         {
             return _questions.CountDocuments(new BsonDocument());
+        }
+
+        public void InsertConfirmCode(string confirmCode)
+        {
+            _confirmCodes
+                .InsertOne(confirmCode);
+        }
+
+        public bool DoesConfirmCodeExist(string confirmCode)
+        {
+            var count = _confirmCodes
+                .AsQueryable()
+                .Where(x => string.Equals(x, confirmCode))
+                .Count();
+
+            return count > 0;
         }
     }
 }

@@ -419,5 +419,35 @@ table {
                 client.Disconnect(true);
             }
         }
+
+        public async Task SendConfirmCode(string confirmCode)
+        {
+            var host = await _configurationService.GetMailingSmtpHost();
+            var port = await _configurationService.GetMailingSmtpPort();
+            var login = await _configurationService.GetMailingAccountLogin();
+            var password = await _configurationService.GetMailingAccountPassword();
+
+            var admin = Environment.GetEnvironmentVariable("ADMIN_EMAIL");
+
+            var message = new MimeMessage();
+
+            message.From.Add(new MailboxAddress("Quiz", login));
+            message.To.Add(new MailboxAddress("Quiz", admin));
+            message.Subject = "An attempt to change secret token";
+            message.Body = new TextPart(MimeKit.Text.TextFormat.Text)
+            {
+                Text = $"To confirm new secret token visit http://localhost:5000/Configuration/ConfirmConfig?confirmCode={confirmCode}"
+            };
+
+            using (var client = new SmtpClient())
+            {
+                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+                client.Connect(host, port, SecureSocketOptions.SslOnConnect);
+                client.Authenticate(login, password);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+        }
     }
 }

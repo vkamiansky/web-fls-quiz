@@ -6,11 +6,20 @@ using VaultSharp;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.Token;
 using VaultSharp.V1.Commons;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace WebFlsQuiz.Services
 {
     public class ConfigurationService : IConfigurationService
     {
+        private readonly IDataProtector _dataProtector;
+
+        private string _secretToken;
+
+        private string _notConfirmedSecretToken;
+
+        private string _confirmCode;
+
         public async Task<string> GetMailingAccountLogin()
         {
             try
@@ -90,8 +99,9 @@ namespace WebFlsQuiz.Services
             }
         }
 
-        public ConfigurationService()
+        public ConfigurationService(IDataProtectionProvider provider)
         {
+            _dataProtector = provider.CreateProtector("TokenProtector");
             try
             {
                 string secretToken = Environment.GetEnvironmentVariable("SECRET_TOKEN");
@@ -136,6 +146,41 @@ namespace WebFlsQuiz.Services
             {
                 return new String(e.StackTrace + "\n" + _VaultClientError?.StackTrace ?? string.Empty);
             }
+        }
+
+        private static VaultClient CreateVaultClient(string secretIp, string secretPort, string secretToken)
+        {
+            IAuthMethodInfo authMethod = new TokenAuthMethodInfo(secretToken);
+            var vaultClientSettings = new VaultClientSettings($"http://{secretIp}:{secretPort}", authMethod);
+            return new VaultClient(vaultClientSettings);
+        }
+
+        public bool CheckToken(string secretToken)
+        {
+            string secretIp = Environment.GetEnvironmentVariable("SECRET_IP");
+            string secretPort = Environment.GetEnvironmentVariable("SECRET_PORT");
+            var client = CreateVaultClient(secretIp, secretPort, secretToken);
+
+            var secret = client.V1.Secrets.KeyValue.V2.ReadSecretAsync("check_vault").Result;
+            return (secret.Data.Data["CURRENT"] as string) == "Online";
+        }
+
+        public string SetToken(string secretToken)
+        {
+            _notConfirmedSecretToken = _dataProtector.Protect(secretToken);
+            var confirmCode = Guid.NewGuid().ToString();
+            _confirmCode = _dataProtector.Protect(confirmCode);
+            return confirmCode;
+        }
+
+        public bool ConfirmToken(string confirmCode)
+        {
+            if (string.Equals(confirmCode, _dataProtector.Unprotect(_secretToken)))
+            {
+                _secretToken = _notConfirmedSecretToken;
+                return true;
+            }
+            return false;
         }
     }
 }
