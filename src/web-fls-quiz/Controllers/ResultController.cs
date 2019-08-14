@@ -24,7 +24,7 @@ namespace WebFlsQuiz.Controllers
         [HttpPost]
         public string SaveResults(string email, string name, string comment, UserAnswer[] userAnswers)
         {
-            var results = _QuestionService.GetUserResult(userAnswers);
+            var results = _QuestionService.GetUserResult(userAnswers, "HolyJS");
             //_MailService.SendResults(email, name, comment, results);
             return JsonConvert.SerializeObject(new { }, JsonSerializerSettings);
         }

@@ -1,12 +1,11 @@
-﻿using System.Linq;
-using WebFlsQuiz.Models;
+﻿using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Interfaces
 {
     public interface IDataStorage
     {
-        QuestionData GetQuestion(int id);
+        QuestionData GetQuestion(string quizName, int id);
         QuizInfo GetQuiz(string quizName);
-        IQueryable<int> GetQuestionIds(int quizId);
+        int GetQuestionsNumber(string quizName);
     }
 }
