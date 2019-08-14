@@ -20,7 +20,21 @@ namespace WebFlsQuiz.Controllers
         [HttpPost]
         public string GetRandom(int[] excludedQuestionsIds, string quizName)
         {
-            var question = _QuestionService.GetRandom(excludedQuestionsIds, quizName);
+            Models.Question question;
+            try
+            {
+                question = _QuestionService.GetRandom(excludedQuestionsIds, quizName);
+            }
+            catch (System.TimeoutException)
+            {
+                // Looks like MongoDB is not responding
+                return null;
+            }
+            catch (MongoDB.Driver.MongoConnectionException)
+            {
+                // Looks like MongoDB is not responding
+                return null;
+            }
 
             return JsonConvert.SerializeObject(
                 new {
