@@ -1,6 +1,6 @@
 ﻿namespace WebFlsQuiz.Models
 {
-    public class Quiz
+    public class QuizInfo
     {
         public int Id { get; set; }
 

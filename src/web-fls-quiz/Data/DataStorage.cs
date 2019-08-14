@@ -12,8 +12,8 @@ namespace WebFlsQuiz.Data
         private IMongoCollection<QuestionData> _questions =>
             _database.GetCollection<QuestionData>("Questions");
 
-        private IMongoCollection<Quiz> _quizzes =>
-            _database.GetCollection<Quiz>("Quizzes");
+        private IMongoCollection<QuizInfo> _quizzes =>
+            _database.GetCollection<QuizInfo>("Quizzes");
 
         public DataStorage(IConfigurationService configuration)
         {
@@ -37,7 +37,7 @@ namespace WebFlsQuiz.Data
                 .Select(x => x.Id);
         }
 
-        public Quiz GetQuiz(string quizName)
+        public QuizInfo GetQuiz(string quizName)
         {
             return _quizzes
                 .AsQueryable()
