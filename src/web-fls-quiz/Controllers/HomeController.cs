@@ -14,6 +14,12 @@ namespace WebFlsQuiz.Controllers
             _dataStorage = dataStorage;
         }
 
+        [HttpHead]
+        public IActionResult Head()
+        {
+            return Ok();
+        }
+
         [HttpGet("{quizName}")]
         public IActionResult Index(string quizName = "HolyJS")
         {
