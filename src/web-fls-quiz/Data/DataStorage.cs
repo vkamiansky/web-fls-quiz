@@ -1,6 +1,5 @@
 ﻿using WebFlsQuiz.Interfaces;
 using WebFlsQuiz.Models;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Linq;
 
@@ -10,8 +9,11 @@ namespace WebFlsQuiz.Data
     {
         private readonly IMongoDatabase _database;
 
-        private IMongoCollection<QuestionData> _questions =>
-            _database.GetCollection<QuestionData>("Questions");
+        private IMongoCollection<QuizInfo> _quizzes =>
+            _database.GetCollection<QuizInfo>("Quizzes");
+
+        private IMongoCollection<QuizResult> _quizResults =>
+            _database.GetCollection<QuizResult>("QuizResults");
 
         public DataStorage(IConfigurationService configuration)
         {
@@ -19,17 +21,37 @@ namespace WebFlsQuiz.Data
             _database = client.GetDatabase(configuration.GetDbName().Result);
         }
 
-        public QuestionData GetQuestion(int id)
+        public QuestionData GetQuestion(string quizName, int id)
         {
-            return _questions
+            return _quizzes
                 .AsQueryable()
+                .Where(x => x.Name == quizName)
+                .SelectMany(x => x.Questions)
                 .Where(x => x.Id == id)
-                .First();
+                .FirstOrDefault();
         }
 
-        public long GetQuestionsNumber()
+        public int GetQuestionsNumber(string quizName)
         {
-            return _questions.CountDocuments(new BsonDocument());
+            return _quizzes
+                .AsQueryable()
+                .Where(x => x.Name == quizName)
+                .SelectMany(x => x.Questions)
+                .Count();
+        }
+
+        public QuizInfo GetQuiz(string quizName)
+        {
+            return _quizzes
+                .AsQueryable()
+                .Where(x => string.Equals(x.Name, quizName))
+                .FirstOrDefault();
+        }
+
+        public void InsertQuizResult(QuizResult quizResult)
+        {
+            _quizResults
+                .InsertOne(quizResult);
         }
     }
 }

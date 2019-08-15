@@ -1,4 +1,4 @@
-﻿define([
+﻿define('apps/quiz/components/question/question', [
         'knockout'
     ],
     function(ko) {

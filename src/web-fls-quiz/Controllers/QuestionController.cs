@@ -18,12 +18,12 @@ namespace WebFlsQuiz.Controllers
         }
 
         [HttpPost]
-        public string GetRandom(int[] excludedQuestionsIds)
+        public string GetRandom(int[] excludedQuestionsIds, string quizName)
         {
             Models.Question question;
             try
             {
-                question = _QuestionService.GetRandom(excludedQuestionsIds);
+                question = _QuestionService.GetRandom(excludedQuestionsIds, quizName);
             }
             catch (System.TimeoutException)
             {

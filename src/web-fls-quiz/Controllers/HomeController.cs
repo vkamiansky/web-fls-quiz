@@ -1,14 +1,34 @@
 ﻿using WebFlsQuiz.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using WebFlsQuiz.Interfaces;
 
 namespace WebFlsQuiz.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly IDataStorage _dataStorage;
+
+        public HomeController(IDataStorage dataStorage)
         {
-            return View();
+            _dataStorage = dataStorage;
+        }
+
+        [HttpHead]
+        public IActionResult Head()
+        {
+            return Ok();
+        }
+
+        [HttpGet("{quizName}")]
+        public IActionResult Index(string quizName = "HolyJS")
+        {
+            var quiz = _dataStorage.GetQuiz(quizName);
+
+            if (quiz != null)
+                return View("Index", quiz);
+            else
+                return Index();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

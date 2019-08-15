@@ -1,4 +1,4 @@
-﻿define([],
+﻿define('apps/quiz/components/intro/intro', [],
     function() {
         'use strict';
 
@@ -6,7 +6,8 @@
             var showTest = params && params.showTest;
 
             return {
-                startTestButtonClick: _startTestButtonClick.bind(null, showTest)
+                startTestButtonClick: _startTestButtonClick.bind(null, showTest),
+                quizGreeting: params && params.quizGreeting
             };
         };
 

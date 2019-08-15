@@ -4,7 +4,9 @@ namespace WebFlsQuiz.Interfaces
 {
     public interface IDataStorage
     {
-        QuestionData GetQuestion(int id);
-        long GetQuestionsNumber();
+        QuestionData GetQuestion(string quizName, int id);
+        QuizInfo GetQuiz(string quizName);
+        int GetQuestionsNumber(string quizName);
+        void InsertQuizResult(QuizResult quizResult);
     }
 }
