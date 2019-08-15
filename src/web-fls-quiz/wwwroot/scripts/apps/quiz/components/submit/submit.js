@@ -19,7 +19,7 @@
             self.userAnswers = params && params.userAnswers || [];
             self.showFinish = params && params.showFinish;
             self.showModalErrorMessage = params && params.showModalErrorMessage;
-            self.quizId = params && params.quizId;
+            self.quizName = params && params.quizName;
 
             self.isReadyForSubmit = ko.pureComputed(_isReadyForSubmit.bind(self));
 
@@ -83,7 +83,7 @@
                         name: self.name(),
                         comment: self.comment(),
                         userAnswers: self.userAnswers(),
-                        quizId: self.quizId
+                        quizName: self.quizName
                     },
                     function _onSuccess(response) {
                         if (response.hasErrors) {

@@ -36,7 +36,7 @@ namespace WebFlsQuiz.Data
             return _quizzes
                 .AsQueryable()
                 .Where(x => x.Name == quizName)
-                .Select(x => x.Questions)
+                .SelectMany(x => x.Questions)
                 .Count();
         }
 

@@ -7,7 +7,7 @@
 <!-- ko component: { name: "test", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showSubmit: showSubmit, showIntro: showIntro, addUserAnswer: addUserAnswer, quizName : "@(new Microsoft.AspNetCore.Html.HtmlString(Model.Name))" } } --><!-- /ko -->
 <!-- /ko -->
 <!-- ko if: isSubmitActive -->
-<!-- ko component: { name: "submit", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showFinish: showFinish, quizId : @Model.Id } } --><!-- /ko -->
+<!-- ko component: { name: "submit", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showFinish: showFinish, quizName : "@(new Microsoft.AspNetCore.Html.HtmlString(Model.Name))" } } --><!-- /ko -->
 <!-- /ko -->
 <!-- ko if: isFinishActive -->
 <!-- ko component: { name: "finish" } --><!-- /ko -->

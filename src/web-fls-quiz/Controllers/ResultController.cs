@@ -28,19 +28,19 @@ namespace WebFlsQuiz.Controllers
         }
 
         [HttpPost]
-        public string SaveResults(string email, string name, string comment, UserAnswer[] userAnswers, int quizId)
+        public string SaveResults(string email, string name, string comment, UserAnswer[] userAnswers, string quizName)
         {
             var quizResult = new QuizResult
             {
                 Comment = comment,
                 Email = email,
                 Name = name,
-                QuizId = quizId,
+                QuizName = quizName,
                 UserAnswers = userAnswers
             };
             _dataStorage.InsertQuizResult(quizResult);
 
-            var results = _questionService.GetUserResult(userAnswers, "HolyJS");
+            var results = _questionService.GetUserResult(userAnswers, quizName);
             //_MailService.SendResults(email, name, comment, results);
             return JsonConvert.SerializeObject(new { }, JsonSerializerSettings);
         }
