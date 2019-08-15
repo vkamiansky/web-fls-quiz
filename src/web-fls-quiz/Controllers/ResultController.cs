@@ -40,7 +40,7 @@ namespace WebFlsQuiz.Controllers
             };
             _dataStorage.InsertQuizResult(quizResult);
 
-            var results = _questionService.GetUserResult(userAnswers);
+            var results = _questionService.GetUserResult(userAnswers, "HolyJS");
             //_MailService.SendResults(email, name, comment, results);
             return JsonConvert.SerializeObject(new { }, JsonSerializerSettings);
         }

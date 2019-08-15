@@ -1,10 +1,10 @@
-﻿@model Quiz
+﻿@model QuizInfo
 
 <!-- ko if: isIntroActive -->
 <!-- ko component: { name: "intro", params: { showTest: showTest, quizGreeting : "@(new Microsoft.AspNetCore.Html.HtmlString(Model.Greeting))" } } --><!-- /ko -->
 <!-- /ko -->
 <!-- ko if: isTestActive -->
-<!-- ko component: { name: "test", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showSubmit: showSubmit, showIntro: showIntro, addUserAnswer: addUserAnswer, quizId : @Model.Id } } --><!-- /ko -->
+<!-- ko component: { name: "test", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showSubmit: showSubmit, showIntro: showIntro, addUserAnswer: addUserAnswer, quizName : "@(new Microsoft.AspNetCore.Html.HtmlString(Model.Name))" } } --><!-- /ko -->
 <!-- /ko -->
 <!-- ko if: isSubmitActive -->
 <!-- ko component: { name: "submit", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showFinish: showFinish, quizId : @Model.Id } } --><!-- /ko -->
