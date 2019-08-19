@@ -16,11 +16,14 @@ namespace WebFlsQuiz.Services
             _dataStorage = dataStorage;
         }
         
-        public Question GetRandom(int[] excludedQuestionIds)
+        public Question GetRandom(int[] excludedQuestionIds, string quizName)
         {
-            var availableIds = Enumerable.Range(1, (int)_dataStorage.GetQuestionsNumber()).Except(excludedQuestionIds).ToArray();
+            var availableIds = Enumerable
+                .Range(1, _dataStorage.GetQuestionsNumber(quizName))
+                .Except(excludedQuestionIds)
+                .ToArray();
             var nextQuestionIdPosition = _random.Next(0, availableIds.Length);
-            var questionData = _dataStorage.GetQuestion(availableIds[nextQuestionIdPosition]);
+            var questionData = _dataStorage.GetQuestion(quizName, availableIds[nextQuestionIdPosition]);
             return new Question
             {
                 Id = questionData.Id,
@@ -37,7 +40,7 @@ namespace WebFlsQuiz.Services
             };
         }
 
-        public UserResult GetUserResult(UserAnswer[] userAnswers)
+        public UserResult GetUserResult(UserAnswer[] userAnswers, string quizName)
         {
             return new UserResult
             {
@@ -45,7 +48,7 @@ namespace WebFlsQuiz.Services
                 userAnswers,
                 x =>
                 {
-                    var questionData = _dataStorage.GetQuestion(x.QuestionId);
+                    var questionData = _dataStorage.GetQuestion(quizName, x.QuestionId);
                     return new QuestionResult
                     {
                         QuestionText = questionData.Text,

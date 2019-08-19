@@ -1,4 +1,4 @@
-﻿define([
+﻿define('apps/quiz/components/submit/submit', [
         'knockout',
         'jquery',
         'knockout.validation'
@@ -19,6 +19,7 @@
             self.userAnswers = params && params.userAnswers || [];
             self.showFinish = params && params.showFinish;
             self.showModalErrorMessage = params && params.showModalErrorMessage;
+            self.quizName = params && params.quizName;
 
             self.isReadyForSubmit = ko.pureComputed(_isReadyForSubmit.bind(self));
 
@@ -81,7 +82,8 @@
                         email: self.email(),
                         name: self.name(),
                         comment: self.comment(),
-                        userAnswers: self.userAnswers()
+                        userAnswers: self.userAnswers(),
+                        quizName: self.quizName
                     },
                     function _onSuccess(response) {
                         if (response.hasErrors) {
