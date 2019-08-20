@@ -45,7 +45,9 @@ namespace WebFlsQuiz.Controllers
             {
                 _lastRequestTime = now;
                 var result = await TryReconfig(newConfiguration);
-                return result.ToString();
+                return result ?
+                    "Please, check admin e-mail and confirm configuration change" :
+                    "Configuration change failed";
             }
             else
             {
