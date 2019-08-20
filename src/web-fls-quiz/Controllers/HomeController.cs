@@ -28,7 +28,7 @@ namespace WebFlsQuiz.Controllers
             if (quiz != null)
                 return View("Index", quiz);
             else
-                return Index();
+                return View("Index", null);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
