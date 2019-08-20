@@ -14,6 +14,14 @@
 
             var quiz = new QuizViewModel();
 
+            ko.bindingHandlers.highlightedCode = {
+                update: function (element, valueAccessor) {
+                    var code = ko.unwrap(valueAccessor());
+                    element.innerText = code;
+                    hljs.highlightBlock(element);
+                }
+            };
+
             ko.applyBindings(quiz, document.getElementById(domElement));
         }
 

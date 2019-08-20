@@ -5,6 +5,8 @@
         return function(params) {
             var showTest = params && params.showTest;
 
+            //self.quizGreeting = ko.observable(params.quizGreeting);
+
             return {
                 startTestButtonClick: _startTestButtonClick.bind(null, showTest),
                 quizGreeting: params && params.quizGreeting

@@ -2,7 +2,9 @@
     <div class="bg-colored indent-all">
         <h2 class="centered-h">Приветствуем вас в нашем космическом пространстве!</h2>
         <div class="felix"></div>
-        <div data-bind="html: quizGreeting"></div>
+        <pre>
+            <code class="cs hljs" data-bind="highlightedCode: quizGreeting"></code>
+        </pre>
         <div class="centered-h">
             <input readonly class="form-button" data-bind="click: startTestButtonClick" onfocus="this.blur()" value="Начать" />
         </div>

@@ -9,7 +9,8 @@
             'knockout.validation': 'vendor/plugins/knockout.validation',
             'jquery.modal': 'vendor/plugins/jquery.modal.min',
             'text': 'vendor/plugins/text',
-            'json': 'vendor/plugins/json'
+            'json': 'vendor/plugins/json',
+            'hljs': 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min'
         },
         shim: {
             'jquery.modal': {
@@ -45,4 +46,8 @@
             componentRegistrator.register(component);
         });
     }
+
+    require(['hljs'], function (hljs) {
+        hljs.initHighlighting();
+    });
 })();
