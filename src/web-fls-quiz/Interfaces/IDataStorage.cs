@@ -6,9 +6,7 @@ namespace WebFlsQuiz.Interfaces
     {
         QuestionData GetQuestion(string quizName, int id);
         QuizInfo GetQuiz(string quizName);
-        int GetQuestionsNumber(string quizName);
-        void InsertQuizResult(QuizResult quizResult);
-        void InsertConfirmCode(string confirmCode);
-        bool DoesConfirmCodeExist(string confirmCode);
+        int? GetQuestionsNumber(string quizName);
+        bool InsertQuizResult(QuizResult quizResult);
     }
 }

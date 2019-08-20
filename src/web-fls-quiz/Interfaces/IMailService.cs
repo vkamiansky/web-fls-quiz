@@ -6,6 +6,6 @@ namespace WebFlsQuiz.Interfaces
     public interface IMailService
     {
         Task SendResults(string email, string name, string comment, UserResult result);
-        Task SendConfirmCode(string confirmCode);
+        Task<bool> SendConfirmCode(string confirmCode, bool useNotConfirmedConfiguration = false);
     }
 }

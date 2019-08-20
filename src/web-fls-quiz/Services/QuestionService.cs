@@ -19,7 +19,7 @@ namespace WebFlsQuiz.Services
         public Question GetRandom(int[] excludedQuestionIds, string quizName)
         {
             var availableIds = Enumerable
-                .Range(1, _dataStorage.GetQuestionsNumber(quizName))
+                .Range(1, _dataStorage.GetQuestionsNumber(quizName).Value)
                 .Except(excludedQuestionIds)
                 .ToArray();
             var nextQuestionIdPosition = _random.Next(0, availableIds.Length);

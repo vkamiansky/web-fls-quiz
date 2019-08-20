@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using WebFlsQuiz.Interfaces;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Controllers
 {
@@ -9,7 +12,7 @@ namespace WebFlsQuiz.Controllers
     {
         private static DateTime _lastRequestTime;
 
-        private static TimeSpan _timeBetweenRequests = new TimeSpan(0, 1, 0);
+        private static TimeSpan _timeBetweenRequests = new TimeSpan(0, 2, 0);
 
         private readonly IConfigurationService _configurationService;
 
@@ -28,44 +31,53 @@ namespace WebFlsQuiz.Controllers
         }
 
         [HttpPost]
-        public string SetToken(string token)
+        public async Task<string> Change([FromBody]Configuration newConfiguration)
         {
-            if (string.IsNullOrEmpty(token))
+            if (string.IsNullOrEmpty(newConfiguration.Token))
                 return "Error: token was not sent";
+            if (string.IsNullOrEmpty(newConfiguration.IP))
+                return "Error: IP address was not sent";
+            if (string.IsNullOrEmpty(newConfiguration.Port))
+                return "Error: port was not sent";
 
             var now = DateTime.Now;
-            if (_lastRequestTime == null)
+            if (now - _lastRequestTime > _timeBetweenRequests)
             {
                 _lastRequestTime = now;
-                if (_configurationService.CheckToken(token))
-                {
-                    var confirmCode = _configurationService.SetToken(token);
-                    _mailService.SendConfirmCode(confirmCode);
-                }
-                return "";
+                var result = await TryReconfig(newConfiguration);
+                return result.ToString();
             }
             else
             {
-                if (now - _lastRequestTime > _timeBetweenRequests)
-                {
-                    // Set token
-                    return "";
-                }
-                else
-                {
-                    // User has to wait
-                    return "";
-                }
+                return $"Next configuration change will be possible at {_lastRequestTime + _timeBetweenRequests}";
             }
         }
 
-        [HttpPost]
-        public string ConfirmConfig(string confirmCode)
+        [HttpGet]
+        public string Confirm(string confirmCode)
         {
             if (string.IsNullOrEmpty(confirmCode))
                 return "Error: confirmation code was not sent";
 
+            var result = _configurationService.ConfirmConfiguration(confirmCode);
+            return result.ToString();
+        }
 
+        [NonAction]
+        private async Task<bool> TryReconfig(Configuration newConfiguration)
+        {
+            if (_configurationService.CheckConfiguration(newConfiguration))
+            {
+                var confirmCode = _configurationService.SetConfiguration(newConfiguration);
+                if (!string.IsNullOrEmpty(confirmCode))
+                {
+                    var result = await _mailService.SendConfirmCode(confirmCode);
+                    if (!result)
+                        result = await _mailService.SendConfirmCode(confirmCode, true);
+                    return result;
+                }
+            }
+            return false;
         }
     }
 }
