@@ -41,7 +41,7 @@ namespace WebFlsQuiz.Controllers
             _dataStorage.InsertQuizResult(quizResult);
 
             var results = _questionService.GetUserResult(userAnswers, quizName);
-            //_MailService.SendResults(email, name, comment, results);
+            _mailService.SendResults(email, name, comment, results);
             return JsonConvert.SerializeObject(new { }, JsonSerializerSettings);
         }
     }
