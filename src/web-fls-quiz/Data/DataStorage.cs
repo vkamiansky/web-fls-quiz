@@ -2,28 +2,87 @@
 using WebFlsQuiz.Models;
 using MongoDB.Driver;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace WebFlsQuiz.Data
 {
     public class DataStorage : IDataStorage
     {
-        private readonly IMongoDatabase _database;
+        private readonly IConfigurationService _configurationService;
 
-        private IMongoCollection<QuizInfo> _quizzes =>
-            _database.GetCollection<QuizInfo>("Quizzes");
+        private const string _quizzesCollectionName = "Quizzes";
 
-        private IMongoCollection<QuizResult> _quizResults =>
-            _database.GetCollection<QuizResult>("QuizResults");
+        private const string _quizResultsCollectionName = "QuizResults";
 
         public DataStorage(IConfigurationService configuration)
         {
-            var client = new MongoClient(configuration.GetDbConnectionString().Result);
-            _database = client.GetDatabase(configuration.GetDbName().Result);
+            _configurationService = configuration;
         }
+
+        #region Creating connection and getting access to collections
+
+        private async Task<IMongoDatabase> GetDatabase()
+        {
+            var connectionString = await _configurationService.GetDbConnectionString();
+            var dbName = await _configurationService.GetDbName();
+
+            if (string.IsNullOrEmpty(connectionString) ||
+                string.IsNullOrEmpty(dbName))
+            {
+                return null;
+            }
+
+            try
+            {
+                var client = new MongoClient(connectionString);
+                return client.GetDatabase(dbName);
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
+        }
+
+        private IMongoCollection<T> GetCollection<T>(IMongoDatabase database, string collectionName)
+        {
+            if (database == null ||
+                string.IsNullOrEmpty(collectionName))
+            {
+                return null;
+            }
+
+            try
+            {
+                return database.GetCollection<T>(collectionName);
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
+        }
+
+        private async Task<IMongoCollection<QuizInfo>> GetQuizzesCollection()
+        {
+            var db = await GetDatabase();
+            return GetCollection<QuizInfo>(db, _quizzesCollectionName);
+        }
+
+        private async Task<IMongoCollection<QuizResult>> GetQuizResultsCollection()
+        {
+            var db = await GetDatabase();
+            return GetCollection<QuizResult>(db, _quizResultsCollectionName);
+        }
+
+        #endregion
 
         public QuestionData GetQuestion(string quizName, int id)
         {
-            return _quizzes
+            var collection = GetQuizzesCollection().Result;
+
+            if (collection == null)
+                return null;
+
+            return collection
                 .AsQueryable()
                 .Where(x => x.Name == quizName)
                 .SelectMany(x => x.Questions)
@@ -31,9 +90,14 @@ namespace WebFlsQuiz.Data
                 .FirstOrDefault();
         }
 
-        public int GetQuestionsNumber(string quizName)
+        public int? GetQuestionsNumber(string quizName)
         {
-            return _quizzes
+            var collection = GetQuizzesCollection().Result;
+
+            if (collection == null)
+                return null;
+
+            return collection
                 .AsQueryable()
                 .Where(x => x.Name == quizName)
                 .SelectMany(x => x.Questions)
@@ -42,16 +106,28 @@ namespace WebFlsQuiz.Data
 
         public QuizInfo GetQuiz(string quizName)
         {
-            return _quizzes
+            var collection = GetQuizzesCollection().Result;
+
+            if (collection == null)
+                return null;
+
+            return collection
                 .AsQueryable()
                 .Where(x => string.Equals(x.Name, quizName))
                 .FirstOrDefault();
         }
 
-        public void InsertQuizResult(QuizResult quizResult)
+        public bool InsertQuizResult(QuizResult quizResult)
         {
-            _quizResults
+            var collection = GetQuizResultsCollection().Result;
+
+            if (collection == null)
+                return false;
+
+            collection
                 .InsertOne(quizResult);
+
+            return true;
         }
     }
 }

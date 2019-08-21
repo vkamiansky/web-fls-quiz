@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Interfaces
 {
@@ -14,5 +12,10 @@ namespace WebFlsQuiz.Interfaces
         Task<string> GetDbConnectionString();
         Task<string> GetDbName();
         Task<string> GetIsConfigured();
+        bool CheckConfiguration(Configuration configuration);
+        string SetConfiguration(Configuration configuration);
+        bool ConfirmConfiguration(string confirmCode);
+        Task<MailSettings> GetMailSettingsUsingNotConfirmedConfiguration();
+        Task<MailSettings> GetMailSettings();
     }
 }

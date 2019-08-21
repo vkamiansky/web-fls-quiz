@@ -1,5 +1,11 @@
 ﻿@model QuizInfo
 
+@if (Model == null)
+{
+    <p>Упс, что-то пошло не так. Попробуйте еще раз через пару минут</p>
+}
+else
+{
 <!-- ko if: isIntroActive -->
 <!-- ko component: { name: "intro", params: { showTest: showTest, quizGreeting : '@(new Microsoft.AspNetCore.Html.HtmlString(Model.Greeting))' } } --><!-- /ko -->
 <!-- /ko -->
@@ -21,3 +27,4 @@
 <div class="loading blocker" data-bind="visible: loading">
     Loading...
 </div>
+}

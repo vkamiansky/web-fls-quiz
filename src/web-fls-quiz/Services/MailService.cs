@@ -419,5 +419,53 @@ table {
                 client.Disconnect(true);
             }
         }
+
+        public async Task<bool> SendConfirmCode(string confirmCode, bool useNotConfirmedConfiguration = false)
+        {
+            MailSettings mailSettings;
+            if (useNotConfirmedConfiguration)
+            {
+                mailSettings = await _configurationService.GetMailSettingsUsingNotConfirmedConfiguration();
+            }
+            else
+            {
+                mailSettings = await _configurationService.GetMailSettings();
+            }
+
+            if (mailSettings == null)
+                return false;
+
+            if (string.IsNullOrEmpty(mailSettings.Address) ||
+                string.IsNullOrEmpty(mailSettings.Login) ||
+                string.IsNullOrEmpty(mailSettings.Password) ||
+                mailSettings.Port == 0)
+            {
+                return false;
+            }
+
+            var admin = Environment.GetEnvironmentVariable("ADMIN_EMAIL");
+
+            var message = new MimeMessage();
+
+            message.From.Add(new MailboxAddress("Quiz", mailSettings.Login));
+            message.To.Add(new MailboxAddress("Quiz", admin));
+            message.Subject = "An attempt to change secret token";
+            message.Body = new TextPart(MimeKit.Text.TextFormat.Text)
+            {
+                Text = $"To confirm new configuration visit http://<web-fls-quiz-address>/Configuration/Confirm?confirmCode={confirmCode}"
+            };
+
+            using (var client = new SmtpClient())
+            {
+                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+                client.Connect(mailSettings.Address, mailSettings.Port, SecureSocketOptions.SslOnConnect);
+                client.Authenticate(mailSettings.Login, mailSettings.Password);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+
+            return true;
+        }
     }
 }
