@@ -3,6 +3,7 @@ using WebFlsQuiz.Models;
 using MongoDB.Driver;
 using System.Linq;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 
 namespace WebFlsQuiz.Data
 {
@@ -13,6 +14,8 @@ namespace WebFlsQuiz.Data
         private const string _quizzesCollectionName = "Quizzes";
 
         private const string _quizResultsCollectionName = "QuizResults";
+
+        private const string _standardImagesCollectionName = "StandardImages";
 
         public DataStorage(IConfigurationService configuration)
         {
@@ -73,6 +76,12 @@ namespace WebFlsQuiz.Data
             return GetCollection<QuizResult>(db, _quizResultsCollectionName);
         }
 
+        private async Task<IMongoCollection<StandardImage>> GetStandardImagesCollection()
+        {
+            var db = await GetDatabase();
+            return GetCollection<StandardImage>(db, _standardImagesCollectionName);
+        }
+
         #endregion
 
         public QuestionData GetQuestion(string quizName, int id)
@@ -128,6 +137,30 @@ namespace WebFlsQuiz.Data
                 .InsertOne(quizResult);
 
             return true;
+        }
+
+        public async Task<StandardImage> GetStandardImage(int id)
+        {
+            var collection = await GetStandardImagesCollection();
+
+            if (collection == null)
+                return null;
+
+            return collection
+                .AsQueryable()
+                .Where(x => x.Id == id)
+                .FirstOrDefault();
+        }
+
+        public async Task<int?> GetStandardImagesNumber()
+        {
+            var collection = await GetStandardImagesCollection();
+
+            if (collection == null)
+                return null;
+
+            return (int)(await collection
+                .CountDocumentsAsync(new BsonDocument()));
         }
     }
 }

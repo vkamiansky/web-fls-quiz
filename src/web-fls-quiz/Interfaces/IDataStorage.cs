@@ -1,4 +1,5 @@
-﻿using WebFlsQuiz.Models;
+﻿using System.Threading.Tasks;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Interfaces
 {
@@ -8,5 +9,7 @@ namespace WebFlsQuiz.Interfaces
         QuizInfo GetQuiz(string quizName);
         int? GetQuestionsNumber(string quizName);
         bool InsertQuizResult(QuizResult quizResult);
+        Task<StandardImage> GetStandardImage(int id);
+        Task<int?> GetStandardImagesNumber();
     }
 }
