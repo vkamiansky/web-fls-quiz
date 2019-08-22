@@ -21,7 +21,6 @@
                     element.querySelectorAll('pre code').forEach((block) => {
                         hljs.highlightBlock(block);
                     });
-                    hljs.highlightBlock(element);
                 }
             };
 

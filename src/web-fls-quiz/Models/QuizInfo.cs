@@ -11,5 +11,7 @@
         public QuizOrganizer Organizer { get; set; }
 
         public QuestionData[] Questions { get; set; }
+
+        public string ParticipantMailTemplate { get; set; }
     }
 }
