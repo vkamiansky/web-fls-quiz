@@ -13,7 +13,7 @@ namespace WebFlsQuiz.Controllers
         {
             var settings = new
             {
-                CountOfQuestions = 5
+                CountOfQuestions = 3
             };
 
             return JsonConvert.SerializeObject(new { settings }, JsonSerializerSettings);
