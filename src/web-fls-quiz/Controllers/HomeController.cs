@@ -21,9 +21,9 @@ namespace WebFlsQuiz.Controllers
         }
 
         [HttpGet("{quizName}")]
-        public IActionResult Index(string quizName = "HolyJS")
+        public IActionResult Index(string quizName = "java")
         {
-            var quiz = _dataStorage.GetQuiz(quizName);
+            var quiz = _dataStorage.GetQuiz(quizName.ToLower());
 
             if (quiz != null)
                 return View("Index", quiz);

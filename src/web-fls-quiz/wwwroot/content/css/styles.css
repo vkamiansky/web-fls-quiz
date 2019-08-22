@@ -656,3 +656,7 @@ p.content-felix {
 /* tablet-and-desktop */
 @media only screen and (min-width: 768px) {
 }
+
+pre {
+	margin: 0;
+}

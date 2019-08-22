@@ -17,7 +17,10 @@
             ko.bindingHandlers.highlightedCode = {
                 update: function (element, valueAccessor) {
                     var code = ko.unwrap(valueAccessor());
-                    element.innerText = code;
+                    element.innerHTML = code;
+                    element.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightBlock(block);
+                    });
                     hljs.highlightBlock(element);
                 }
             };
