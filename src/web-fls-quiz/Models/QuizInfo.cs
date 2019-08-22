@@ -12,6 +12,6 @@
 
         public QuestionData[] Questions { get; set; }
 
-        public string ParticipantMailTemplate { get; set; }
+        public ParticipantMailMessageTemplate ParticipantMailMessageTemplate { get; set; }
     }
 }
