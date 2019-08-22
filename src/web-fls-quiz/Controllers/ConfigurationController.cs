@@ -44,10 +44,8 @@ namespace WebFlsQuiz.Controllers
             if (now - _lastRequestTime > _timeBetweenRequests)
             {
                 _lastRequestTime = now;
-                var result = await TryReconfig(newConfiguration);
-                return result ?
-                    "Please, check admin e-mail and confirm configuration change." :
-                    "Configuration change failed.";
+                await TryReconfig(newConfiguration);
+                return "Configuration change request accepted. Please, check admin email. If the configuration data is correct, a configuration change confirmation link will be sent.";
             }
             else
             {
