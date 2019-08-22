@@ -27,7 +27,7 @@ deploy_script:
 
         docker login -u $env:DOCKER_USER -p $env:DOCKER_PASS
 
-        docker push vkamiansky/flsquiz
+        docker push vkamiansky/flsquiz:$env:APPVEYOR_REPO_TAG_NAME
 
         Write-Host "Success"
     }
