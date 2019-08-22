@@ -51,21 +51,21 @@ namespace WebFlsQuiz.Services
             // Письмо для участника
             var participantEmailMessage = new MimeMessage();
 
-            var participantMailTemplate = _dataStorage.GetQuiz(quizName).ParticipantMailTemplate;
+            var participantMailTemplate = _dataStorage.GetQuiz(quizName).ParticipantMailMessageTemplate;
 
-            participantEmailMessage.From.Add(new MailboxAddress("Команда Quiz", login));
+            participantEmailMessage.From.Add(new MailboxAddress(participantMailTemplate.SenderName, login));
             participantEmailMessage.To.Add(new MailboxAddress(name, email));
-            participantEmailMessage.Subject = "Викторина";
+            participantEmailMessage.Subject = participantMailTemplate.Subject;
             participantEmailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html)
             {
-                Text = participantMailTemplate.Replace("%%name%%", name).Replace("%%percent-correct%%", result.PercentUserAnswersCorrect.ToString()),
+                Text = participantMailTemplate.BodyTemplate.Replace("%%name%%", name).Replace("%%percent-correct%%", result.PercentUserAnswersCorrect.ToString()),
             };
 
             // Письмо для организаторов
             var committeeEmailMessage = new MimeMessage();
 
-            committeeEmailMessage.From.Add(new MailboxAddress("Команда Quiz", login));
-            committeeEmailMessage.To.Add(new MailboxAddress("Quiz Team", login));
+            committeeEmailMessage.From.Add(new MailboxAddress(participantMailTemplate.SenderName, login));
+            committeeEmailMessage.To.Add(new MailboxAddress(participantMailTemplate.SenderName, login));
             committeeEmailMessage.Subject = "Результаты " + name;
             committeeEmailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text)
             {
