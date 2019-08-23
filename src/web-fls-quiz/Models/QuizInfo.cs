@@ -8,6 +8,10 @@
 
         public string Greeting { get; set; }
 
+        public string SubmitScreenMessage { get; set; }
+
+        public string FinishScreenMessage { get; set; }
+
         public QuizOrganizer Organizer { get; set; }
 
         public QuestionData[] Questions { get; set; }

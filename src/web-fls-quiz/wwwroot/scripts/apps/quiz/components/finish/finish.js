@@ -2,8 +2,14 @@
     function() {
         'use strict';
 
-        return function() {
-            return {};
+        return function (params) {
+            var self = this;
+
+            self.finishScreenMessage = params && params.finishScreenMessage;
+
+            return {
+                finishScreenMessage: self.finishScreenMessage
+            };
         };
     }
 );
