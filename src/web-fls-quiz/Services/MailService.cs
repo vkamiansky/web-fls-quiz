@@ -6,6 +6,7 @@ using MimeKit;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace WebFlsQuiz.Services
 {
@@ -15,12 +16,16 @@ namespace WebFlsQuiz.Services
 
         private readonly IDataStorage _dataStorage;
 
+        private readonly IHttpContextAccessor _contextAccessor;
+
         public MailService(
             IConfigurationService configurationService,
-            IDataStorage dataStorage)
+            IDataStorage dataStorage,
+            IHttpContextAccessor contextAccessor)
         {
             _configurationService = configurationService;
             _dataStorage = dataStorage;
+            _contextAccessor = contextAccessor;
         }
 
         private string GetCommitteeMailText(string email, string name, string comment, UserResult result)
@@ -113,10 +118,16 @@ namespace WebFlsQuiz.Services
 
             message.From.Add(new MailboxAddress("Quiz", mailSettings.Login));
             message.To.Add(new MailboxAddress("Quiz", admin));
-            message.Subject = "An attempt to change secret token";
-            message.Body = new TextPart(MimeKit.Text.TextFormat.Text)
+            message.Subject = "An attempt to change configuration";
+
+            var confirmUrl = string.Format("{0}://{1}/Configuration/Confirm?confirmCode={2}",
+                _contextAccessor.HttpContext.Request.Scheme,
+                _contextAccessor.HttpContext.Request.Host,
+                confirmCode);
+
+            message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
             {
-                Text = $"To confirm new configuration visit http://<web-fls-quiz-address>/Configuration/Confirm?confirmCode={confirmCode}"
+                Text = $"To confirm new configuration visit <a href='{confirmUrl}'>this link</a>"
             };
 
             using (var client = new SmtpClient())
