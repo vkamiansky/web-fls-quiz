@@ -20,6 +20,7 @@
             self.showFinish = params && params.showFinish;
             self.showModalErrorMessage = params && params.showModalErrorMessage;
             self.quizName = params && params.quizName;
+            self.submitScreenMessage = params && params.submitScreenMessage;
 
             self.isReadyForSubmit = ko.pureComputed(_isReadyForSubmit.bind(self));
 
@@ -32,7 +33,8 @@
                 name: self.name,
                 comment: self.comment,
                 submitButtonClick: submitButtonClick,
-                isReadyForSubmit: self.isReadyForSubmit
+                isReadyForSubmit: self.isReadyForSubmit,
+                submitScreenMessage: self.submitScreenMessage
             };
         };
 
