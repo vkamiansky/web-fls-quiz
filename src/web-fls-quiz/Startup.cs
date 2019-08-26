@@ -29,6 +29,8 @@ namespace WebFlsQuiz
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddSingleton<IQuestionService, QuestionService>();
             services.AddSingleton<IMailService, MailService>();
             services.AddSingleton<IDataStorage, DataStorage>();
