@@ -152,15 +152,17 @@ namespace WebFlsQuiz.Data
                 .FirstOrDefault();
         }
 
-        public async Task<int?> GetStandardImagesNumber()
+        public async Task<int[]> GetStandardImagesIds()
         {
             var collection = await GetStandardImagesCollection();
 
             if (collection == null)
                 return null;
 
-            return (int)(await collection
-                .CountDocumentsAsync(new BsonDocument()));
+            return collection
+                .AsQueryable()
+                .Select(x => x.Id)
+                .ToArray();
         }
     }
 }

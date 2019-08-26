@@ -34,9 +34,13 @@ namespace WebFlsQuiz.Services
             {
                 if (string.IsNullOrEmpty(questionData.ImageBase64))
                 {
-                    var standardImagesNumber = _dataStorage.GetStandardImagesNumber().Result.Value;
-                    var randomImageId = _random.Next(1, standardImagesNumber);
-                    imageBase64 = _dataStorage.GetStandardImage(randomImageId).Result.ImageBase64;
+                    var standardImagesIds = _dataStorage.GetStandardImagesIds().Result;
+                    if (standardImagesIds.Length > 0)
+                    {
+                        var randomIndex = _random.Next(0, standardImagesIds.Length);
+                        var randomImageId = standardImagesIds[randomIndex];
+                        imageBase64 = _dataStorage.GetStandardImage(randomImageId).Result.ImageBase64;
+                    }
                 }
             }
 
