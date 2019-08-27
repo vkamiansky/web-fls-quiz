@@ -15,14 +15,14 @@ namespace BundleMaker
 
         static void Main(string[] args)
         {
-            var basePath = "..\\web-fls-quiz\\wwwroot\\scripts\\";
-            var componentsLocalPath = "apps\\quiz\\components\\";
+            var basePath = $"src{Path.DirectorySeparatorChar}web-fls-quiz{Path.DirectorySeparatorChar}wwwroot{Path.DirectorySeparatorChar}scripts{Path.DirectorySeparatorChar}";
+            var componentsLocalPath = $"apps{Path.DirectorySeparatorChar}quiz{Path.DirectorySeparatorChar}components{Path.DirectorySeparatorChar}";
             var bundleFileName = "components-bundle.js";
 
-            basePath = basePath.TrimEnd('\\');
-            componentsLocalPath = componentsLocalPath.Trim('\\');
+            basePath = basePath.TrimEnd(Path.DirectorySeparatorChar);
+            componentsLocalPath = componentsLocalPath.Trim(Path.DirectorySeparatorChar);
 
-            var componentsFolderPath = $"{basePath}\\{componentsLocalPath}";
+            var componentsFolderPath = $"{basePath}{Path.DirectorySeparatorChar}{componentsLocalPath}";
             var componentsFolder = new DirectoryInfo(componentsFolderPath);
 
             var jsMinifier = new WebMarkupMin.Core.CrockfordJsMinifier();
@@ -38,12 +38,12 @@ namespace BundleMaker
 
                     if (string.Equals(y.Extension, ".js", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        path = $"{componentsLocalPath}\\{x.Name}\\{name}";
+                        path = $"{componentsLocalPath}{Path.DirectorySeparatorChar}{x.Name}{Path.DirectorySeparatorChar}{name}";
                         contentType = ContentType.Js;
                     }
                     else if (string.Equals(y.Extension, ".html", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        path = $"text!{componentsLocalPath}\\{x.Name}\\{y.Name}";
+                        path = $"text!{componentsLocalPath}{Path.DirectorySeparatorChar}{x.Name}{Path.DirectorySeparatorChar}{y.Name}";
                         contentType = ContentType.Html;
                     }
                     else return (ContentType: contentType, ModuleName: x.Name, ContentPath: y.FullName, Content: string.Empty);
@@ -73,7 +73,7 @@ namespace BundleMaker
             var part3 = $"define('components', [{string.Join(",", moduleDescriptions.Select(x => "'" + x.Key + "'"))}]);";
             var part4 = string.Join(string.Empty, moduleDescriptions.Select(x => $"define('{x.Key}', [{string.Join(",", x.Select(y => "'" + y.ContentPath + "'"))}]);"));
 
-            using (var stream = File.Create($"{componentsFolderPath}\\{bundleFileName}"))
+            using (var stream = File.Create($"{componentsFolderPath}{Path.DirectorySeparatorChar}{bundleFileName}"))
             using (var writer = new StreamWriter(stream))
             {
                 writer.Write(string.Join(Environment.NewLine, new[] { part1, part2, part3, part4 }));
