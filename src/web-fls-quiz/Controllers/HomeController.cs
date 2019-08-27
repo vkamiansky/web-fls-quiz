@@ -9,9 +9,14 @@ namespace WebFlsQuiz.Controllers
     {
         private readonly IDataStorage _dataStorage;
 
-        public HomeController(IDataStorage dataStorage)
+        private readonly IImageService _imageService;
+
+        public HomeController(
+            IDataStorage dataStorage,
+            IImageService imageService)
         {
             _dataStorage = dataStorage;
+            _imageService = imageService;
         }
 
         [HttpHead]
@@ -24,6 +29,10 @@ namespace WebFlsQuiz.Controllers
         public IActionResult Index(string quizName = "java")
         {
             var quiz = _dataStorage.GetQuiz(quizName.ToLower());
+
+            _imageService.LoadIfNeeded(quiz.LogoImage);
+            _imageService.LoadIfNeeded(quiz.FinishScreenImage);
+            _imageService.LoadIfNeeded(quiz.IntroScreenImage);
 
             if (quiz != null)
                 return View("Index", quiz);

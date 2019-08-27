@@ -1,7 +1,9 @@
 ﻿<div class="content-v-centered indent-b">
     <div class="bg-colored indent-all">
         <h2 class="centered-h">Приветствуем вас в нашем космическом пространстве!</h2>
-        <div class="felix"></div>
+        <div>
+            <img class="felix" data-bind="attr: {src: 'data:image/png;base64,' + introScreenImageBase64}" />
+        </div>
         <div data-bind="html: quizGreeting"></div>
         <div class="centered-h">
             <input readonly class="form-button" data-bind="click: startTestButtonClick" onfocus="this.blur()" value="Начать" />

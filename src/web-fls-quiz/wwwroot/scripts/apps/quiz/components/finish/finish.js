@@ -6,9 +6,11 @@
             var self = this;
 
             self.finishScreenMessage = params && params.finishScreenMessage;
+            self.finishScreenImageBase64 = params && params.finishScreenImageBase64;
 
             return {
-                finishScreenMessage: self.finishScreenMessage
+                finishScreenMessage: self.finishScreenMessage,
+                finishScreenImageBase64: self.finishScreenImageBase64
             };
         };
     }

@@ -17,5 +17,11 @@
         public QuestionData[] Questions { get; set; }
 
         public ParticipantMailMessageTemplate ParticipantMailMessageTemplate { get; set; }
+
+        public StandardImage LogoImage { get; set; }
+
+        public StandardImage IntroScreenImage { get; set; }
+
+        public StandardImage FinishScreenImage { get; set; }
     }
 }

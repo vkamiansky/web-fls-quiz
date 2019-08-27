@@ -148,7 +148,7 @@ namespace WebFlsQuiz.Data
 
             return collection
                 .AsQueryable()
-                .Where(x => x.Id == id)
+                .Where(x => x.ImageId == id)
                 .FirstOrDefault();
         }
 
@@ -161,7 +161,7 @@ namespace WebFlsQuiz.Data
 
             return collection
                 .AsQueryable()
-                .Select(x => x.Id)
+                .Select(x => x.ImageId)
                 .ToArray();
         }
     }

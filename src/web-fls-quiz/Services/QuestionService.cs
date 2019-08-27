@@ -9,11 +9,16 @@ namespace WebFlsQuiz.Services
     {
         private Random _random = new Random();
 
-        private IDataStorage _dataStorage;
+        private readonly IDataStorage _dataStorage;
 
-        public QuestionService(IDataStorage dataStorage)
+        private readonly IImageService _imageService;
+
+        public QuestionService(
+            IDataStorage dataStorage,
+            IImageService imageService)
         {
             _dataStorage = dataStorage;
+            _imageService = imageService;
         }
         
         public Question GetRandom(int[] excludedQuestionIds, string quizName)
@@ -25,29 +30,12 @@ namespace WebFlsQuiz.Services
             var nextQuestionIdPosition = _random.Next(0, availableIds.Length);
             var questionData = _dataStorage.GetQuestion(quizName, availableIds[nextQuestionIdPosition]);
 
-            var imageBase64 = questionData.ImageBase64;
-            if (questionData.ImageId != 0)
-            {
-                imageBase64 = _dataStorage.GetStandardImage(questionData.ImageId).Result.ImageBase64;
-            }
-            else
-            {
-                if (string.IsNullOrEmpty(questionData.ImageBase64))
-                {
-                    var standardImagesIds = _dataStorage.GetStandardImagesIds().Result;
-                    if (standardImagesIds.Length > 0)
-                    {
-                        var randomIndex = _random.Next(0, standardImagesIds.Length);
-                        var randomImageId = standardImagesIds[randomIndex];
-                        imageBase64 = _dataStorage.GetStandardImage(randomImageId).Result.ImageBase64;
-                    }
-                }
-            }
+            _imageService.LoadIfNeeded(questionData.Image);
 
             return new Question
             {
                 Id = questionData.Id,
-                ImageBase64 = imageBase64,
+                ImageBase64 = questionData.Image.ImageBase64,
                 Text = questionData.Text,
                 Answers = Array.ConvertAll(
                     questionData.Answers,

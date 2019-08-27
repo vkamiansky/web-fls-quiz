@@ -2,7 +2,9 @@
 {
     public class StandardImage
     {
-        public int Id { get; set; }
+        public MongoDB.Bson.ObjectId Id { get; set; }
+
+        public int ImageId { get; set; }
 
         public string ImageBase64 { get; set; }
     }
