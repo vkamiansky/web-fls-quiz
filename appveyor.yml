@@ -11,7 +11,7 @@ image: Ubuntu
 before_build:
 - dotnet restore ./src/bundle-maker/BundleMaker.csproj
 - dotnet build ./src/bundle-maker/BundleMaker.csproj -v m --no-restore -c Release
-- dotnet run ./src/bundle-maker/bin/Release/netcoreapp2.2/BundleMaker.dll
+- dotnet run ./src/bundle-maker/BundleMaker.csproj
 - dotnet restore ./src/WebFlsQuiz.sln
 
 build_script:
