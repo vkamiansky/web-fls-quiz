@@ -9,10 +9,13 @@ environment:
 image: Ubuntu
 
 before_build:
+- dotnet restore ./src/bundle-maker/BundleMaker.csproj
+- dotnet build ./src/bundle-maker/BundleMaker.csproj -v m --no-restore -c Release
+- dotnet run --project ./src/bundle-maker/BundleMaker.csproj
 - dotnet restore ./src/WebFlsQuiz.sln
 
 build_script:
-- dotnet build ./src/WebFlsQuiz.sln -v m --no-restore
+- dotnet build ./src/WebFlsQuiz.sln -v m --no-restore -c Release
 
 deploy_script:
 - ps: >-
