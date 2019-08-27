@@ -17,9 +17,9 @@ namespace WebFlsQuiz.Services
 
         public void LoadIfNeeded(StandardImage image)
         {
-            if (image.ImageId != 0)
+            if (image.Id != 0)
             {
-                image.ImageBase64 = _dataStorage.GetStandardImage(image.ImageId).Result.ImageBase64;
+                image.ImageBase64 = _dataStorage.GetStandardImage(image.Id).Result.ImageBase64;
             }
             else
             {
