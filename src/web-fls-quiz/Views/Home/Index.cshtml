@@ -6,10 +6,13 @@
 }
 else
 {
-    ViewData["OrganizerWebSiteUrl"] = Model.Organizer.CompanyWebSiteUrl;
+    {
+        ViewData["OrganizerWebSiteUrl"] = Model.Organizer.CompanyWebSiteUrl;
+        ViewData["LogoImageBase64"] = Model.LogoImage.ImageBase64;
+    }
 
     <!-- ko if: isIntroActive -->
-    <!-- ko component: { name: "intro", params: { showTest: showTest, quizGreeting : '@(new Microsoft.AspNetCore.Html.HtmlString(Model.Greeting))' } } --><!-- /ko -->
+    <!-- ko component: { name: "intro", params: { showTest: showTest, quizGreeting : '@(new Microsoft.AspNetCore.Html.HtmlString(Model.Greeting))', introScreenImageBase64 : '@(new Microsoft.AspNetCore.Html.HtmlString(Model.IntroScreenImage.ImageBase64))' } } --><!-- /ko -->
     <!-- /ko -->
     <!-- ko if: isTestActive -->
     <!-- ko component: { name: "test", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showSubmit: showSubmit, showIntro: showIntro, addUserAnswer: addUserAnswer, quizName : '@(new Microsoft.AspNetCore.Html.HtmlString(Model.Name))' } } --><!-- /ko -->
@@ -18,7 +21,7 @@ else
     <!-- ko component: { name: "submit", params: { loading: loading, showModalErrorMessage: showModalErrorMessage, userAnswers: userAnswers, showFinish: showFinish, quizName : '@(new Microsoft.AspNetCore.Html.HtmlString(Model.Name))', submitScreenMessage: '@(new Microsoft.AspNetCore.Html.HtmlString(Model.SubmitScreenMessage))' } } --><!-- /ko -->
     <!-- /ko -->
     <!-- ko if: isFinishActive -->
-    <!-- ko component: { name: "finish", params: { finishScreenMessage: '@(new Microsoft.AspNetCore.Html.HtmlString(Model.FinishScreenMessage))' } } --><!-- /ko -->
+    <!-- ko component: { name: "finish", params: { finishScreenMessage: '@(new Microsoft.AspNetCore.Html.HtmlString(Model.FinishScreenMessage))', finishScreenImageBase64 : '@(new Microsoft.AspNetCore.Html.HtmlString(Model.FinishScreenImage.ImageBase64))' } } --><!-- /ko -->
     <!-- /ko -->
 
     <div id="modalError" class="modal">
