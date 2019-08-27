@@ -5,12 +5,16 @@ VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebFlsQuiz", "web-fls-quiz\WebFlsQuiz.csproj", "{DBED2C83-4B1C-450E-8DA1-852727EB2C36}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{E137E831-9CC2-4CFF-87E2-0545FB929D8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E137E831-9CC2-4CFF-87E2-0545FB929D8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E137E831-9CC2-4CFF-87E2-0545FB929D8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBED2C83-4B1C-450E-8DA1-852727EB2C36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DBED2C83-4B1C-450E-8DA1-852727EB2C36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBED2C83-4B1C-450E-8DA1-852727EB2C36}.Release|Any CPU.ActiveCfg = Release|Any CPU
