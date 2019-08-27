@@ -99,7 +99,7 @@ div {
     text-indent: -9999px;
     width: 22rem;
     height: 6rem;
-	background-repeat: no-repeat;
+    background-repeat: no-repeat;
     background-size: 100% auto;
 }
 
@@ -471,7 +471,7 @@ input[type="number"] {
     width: 35rem;
     height: 18rem;
     margin: 0 auto;
-	background-repeat: no-repeat;
+    background-repeat: no-repeat;
     background-size: contain;
 }
 
@@ -480,7 +480,7 @@ input[type="number"] {
     width: 30rem;
     height: 20rem;
     margin: 0 auto;
-	background-repeat: no-repeat;
+    background-repeat: no-repeat;
     background-size: contain;
 }
 
