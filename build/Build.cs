@@ -88,7 +88,7 @@ namespace Build
             .Executes(() =>
             {
                 DockerBuild(x => x
-                    .SetPath(".")
+                    .SetPath("./src/web-fls-quiz")
                     .SetFile(SourceDirectory / "web-fls-quiz" / "Dockerfile")
                     .SetTag("vkamiansky/flsquiz")
                 );
