@@ -14,7 +14,15 @@
             self.imageBase64 = model.imageBase64;
             self.answers = model.answers || [];
             self.selectedAnswerId = ko.observable();
+            self.multipleAnswer = model.multipleAnswer;
 
+            var answersArray = [];
+            self.answers.forEach(function (element) {
+                answersArray.push(new Answer(element.text, false, element.answerId));
+            });
+
+            self.answers = ko.observableArray(answersArray);
+            
             self.nextQuestionHandler = params && params.nextQuestionHandler;
             self.addUserAnswer = params && params.addUserAnswer;
             self.currentQuestionNumber = params && params.currentQuestionNumber;
@@ -31,7 +39,8 @@
                 selectedAnswerId: self.selectedAnswerId,
                 answerButtonClick: answerButtonClick,
                 countOfQuestions: self.countOfQuestions,
-                currentQuestionNumber: self.currentQuestionNumber
+                currentQuestionNumber: self.currentQuestionNumber,
+                multipleAnswer: self.multipleAnswer
             };
         };
 
@@ -39,12 +48,38 @@
             var self = this;
 
             var selectedAnswerId = self.selectedAnswerId();
-            if (!selectedAnswerId) {
+
+            var answers = self.answers();
+            var i = 0;
+            answers.forEach(function (element) {
+                if (element.isChecked) {
+                    i++;
+                }
+            });
+
+            if (!selectedAnswerId && i == 0) {
                 return;
             }
 
-            self.addUserAnswer(self.id, selectedAnswerId);
+            if (self.multipleAnswer) {
+                var userAnswers = [];
+                answers.forEach(function (element) {
+                    if (element.isChecked) {
+                        userAnswers.push(element.answerId);
+                    }
+                });
+                self.addUserAnswer(self.id, userAnswers);
+            }
+            else {
+                self.addUserAnswer(self.id, selectedAnswerId);
+            }
             self.nextQuestionHandler();
+        }
+
+        function Answer(text, isChecked, answerId) {
+            this.text = text;
+            this.isChecked = isChecked;
+            this.answerId = answerId;
         }
     }
 );

@@ -42,7 +42,8 @@ namespace WebFlsQuiz.Controllers
                         question.Id,
                         question.ImageBase64,
                         question.Text,
-                        question.Answers
+                        question.Answers,
+                        question.MultipleAnswer
                     }}, JsonSerializerSettings);
         }
     }
