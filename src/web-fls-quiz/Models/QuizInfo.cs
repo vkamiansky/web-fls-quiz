@@ -23,5 +23,7 @@
         public StandardImage IntroScreenImage { get; set; }
 
         public StandardImage FinishScreenImage { get; set; }
+
+        public int NumberOfQuestions { get; set; }
     }
 }
