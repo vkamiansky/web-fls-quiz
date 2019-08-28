@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,8 +11,11 @@
 
   <ItemGroup>
     <PackageReference Include="Nuke.Common" Version="0.21.2" />
-    <PackageReference Include="GitVersion.CommandLine.DotNetCore" Version="4.0.1-beta1-49" />
-    <PackageReference Include="Nuke.Docker" Version="0.2.2" />
+    <PackageReference Include="GitVersion.CommandLine.DotNetCore" Version="5.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Nuke.Docker" Version="0.3.0" />
     <PackageReference Include="WebMarkupMin.Core" Version="2.6.0" />
   </ItemGroup>
 
