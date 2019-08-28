@@ -9,5 +9,7 @@
         public string Text { get; set; }
 
         public Answer[] Answers { get; set; }
+
+        public bool MultipleAnswer { get; set; }
     }
 }

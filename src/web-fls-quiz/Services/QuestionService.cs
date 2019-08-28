@@ -44,7 +44,8 @@ namespace WebFlsQuiz.Services
                         AnswerId = x.AnswerId,
                         QuestionId = x.QuestionId,
                         Text = x.Text
-                    })
+                    }),
+                MultipleAnswer = questionData.MultipleAnswer
             };
         }
 
@@ -66,7 +67,7 @@ namespace WebFlsQuiz.Services
                             {
                                 AnswerText = y.Text,
                                 IsCorrect = y.IsCorrect,
-                                IsUserChosen = y.AnswerId == x.AnswerId
+                                IsUserChosen = x.AnswerIds.Contains(y.AnswerId)
                             }),
                     };
                 })
