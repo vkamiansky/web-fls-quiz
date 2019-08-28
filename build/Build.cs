@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Nuke.Common;
 using Nuke.Common.Execution;
@@ -47,11 +48,15 @@ namespace Build
                 EnsureCleanDirectory(OutputDirectory);
             });
 
-        Target BuildBundle => _ => _
+        Target MakeBundle => _ => _
             .Executes(() =>
             {
-
-
+                var scriptsDirectory = SourceDirectory / "web-fls-quiz" / "wwwroot" / "scripts";
+                var componentsDirectory = scriptsDirectory / "apps" / "quiz" / "components";
+                BundleMaker.Run(
+                    scriptsDirectory,
+                    componentsDirectory,
+                    "components-bundle.js");
             });
 
         Target Restore => _ => _
@@ -63,6 +68,7 @@ namespace Build
 
         Target Compile => _ => _
             .DependsOn(Restore)
+            .DependsOn(MakeBundle)
             .Executes(() =>
             {
                 DotNetBuild(s => s

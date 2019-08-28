@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using static Nuke.Common.IO.PathConstruction;
 
 namespace Build
 {
@@ -13,16 +14,13 @@ namespace Build
             Unknown
         }
 
-        public static void Run()
+        public static void Run(
+            AbsolutePath scriptsDirectory,
+            AbsolutePath componentsDirectory,
+            string bundleFileName)
         {
-            var basePath = $"src{Path.DirectorySeparatorChar}web-fls-quiz{Path.DirectorySeparatorChar}wwwroot{Path.DirectorySeparatorChar}scripts{Path.DirectorySeparatorChar}";
-            var componentsLocalPath = $"apps{Path.DirectorySeparatorChar}quiz{Path.DirectorySeparatorChar}components{Path.DirectorySeparatorChar}";
-            var bundleFileName = "components-bundle.js";
-
-            basePath = basePath.TrimEnd(Path.DirectorySeparatorChar);
-            componentsLocalPath = componentsLocalPath.Trim(Path.DirectorySeparatorChar);
-
-            var componentsFolderPath = $"{basePath}{Path.DirectorySeparatorChar}{componentsLocalPath}";
+            var componentsFolderPath = componentsDirectory;
+            var componentsPathForBundle = GetRelativePath(scriptsDirectory, componentsDirectory).Replace('\\', '/').Trim('/');
             var componentsFolder = new DirectoryInfo(componentsFolderPath);
 
             var jsMinifier = new WebMarkupMin.Core.CrockfordJsMinifier();
@@ -38,12 +36,12 @@ namespace Build
 
                     if (string.Equals(y.Extension, ".js", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        path = $"{componentsLocalPath}{Path.DirectorySeparatorChar}{x.Name}{Path.DirectorySeparatorChar}{name}";
+                        path = $"{componentsPathForBundle}/{x.Name}/{name}";
                         contentType = ContentType.Js;
                     }
                     else if (string.Equals(y.Extension, ".html", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        path = $"text!{componentsLocalPath}{Path.DirectorySeparatorChar}{x.Name}{Path.DirectorySeparatorChar}{y.Name}";
+                        path = $"text!{componentsPathForBundle}/{x.Name}/{y.Name}";
                         contentType = ContentType.Html;
                     }
                     else return (ContentType: contentType, ModuleName: x.Name, ContentPath: y.FullName, Content: string.Empty);
@@ -73,7 +71,7 @@ namespace Build
             var part3 = $"define('components', [{string.Join(",", moduleDescriptions.Select(x => "'" + x.Key + "'"))}]);";
             var part4 = string.Join(string.Empty, moduleDescriptions.Select(x => $"define('{x.Key}', [{string.Join(",", x.Select(y => "'" + y.ContentPath + "'"))}]);"));
 
-            using (var stream = File.Create($"{componentsFolderPath}{Path.DirectorySeparatorChar}{bundleFileName}"))
+            using (var stream = File.Create(componentsFolderPath / bundleFileName))
             using (var writer = new StreamWriter(stream))
             {
                 writer.Write(string.Join(Environment.NewLine, new[] { part1, part2, part3, part4 }));
