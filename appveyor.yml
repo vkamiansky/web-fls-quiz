@@ -13,7 +13,7 @@ before_build:
 
 build_script:
 - dotnet build ./build/_build.csproj -v m --no-restore -c Release
-- dotnet run --project ./build/_build.csproj
+- dotnet run --project ./build/_build.csproj BuildDockerImage
 
 deploy_script:
 - ps: >-
