@@ -1,16 +1,12 @@
 ﻿define('apps/quiz/components/test/test', [
         'knockout',
-        'jquery',
-        'json!/settings/quizOptions'
+        'jquery'
     ],
-    function(ko, $, options) {
+    function(ko, $) {
         'use strict';
 
         return function(params) {
             var self = this;
-
-            var optionsParsed = JSON.parse(options);
-            var settings = optionsParsed && optionsParsed.settings || {};
 
             self.loading = params && params.loading;
             self.userAnswers = params && params.userAnswers;
@@ -19,11 +15,11 @@
             self.addUserAnswer = params && params.addUserAnswer;
             self.showModalErrorMessage = params && params.showModalErrorMessage;
             self.quizName = params && params.quizName;
+            self.numberOfQuestions = params && params.numberOfQuestions;
+            self.countOfQuestions = self.numberOfQuestions;
 
             self.currentQuestion = ko.observable();
             self.currentQuestionNumber = ko.observable(0);
-
-            self.countOfQuestions = settings.countOfQuestions || 1;
             
             _loadQuestion.call(self);
 
@@ -32,7 +28,7 @@
                 currentQuestion: self.currentQuestion,
                 addUserAnswer: self.addUserAnswer,
                 currentQuestionNumber: self.currentQuestionNumber,
-                countOfQuestions: self.countOfQuestions
+                countOfQuestions: self.numberOfQuestions
             };
         };
 
