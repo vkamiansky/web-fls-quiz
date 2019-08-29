@@ -36,8 +36,7 @@ namespace Build
         readonly string DockerImageName = "vkamiansky/flsquiz";
 
         Target ScenarioDetails => _ => _
-            .Before(Compile)
-            .Before(PublishDockerImage)
+            .Before(Compile, PublishDockerImage)
             .Executes(() =>
             {
                 Console.WriteLine(IsLocalBuild ? "Local build." : "Server build.");
