@@ -24,8 +24,8 @@ namespace Build
         [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
         readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
-        [Parameter] readonly string DockerUser;
-        [Parameter] readonly string DockerPass;
+        [Parameter("Docker Hub username for publishing docker images")] readonly string DockerUser;
+        [Parameter("Docker Hub password for publishing docker images")] readonly string DockerPass;
 
         [Solution] readonly Solution Solution;
         [GitRepository] readonly GitRepository GitRepository;
