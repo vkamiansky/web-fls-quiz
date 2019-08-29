@@ -111,10 +111,10 @@ namespace Build
 
         Target PublishDockerImage => _ => _
             .OnlyWhenDynamic(() => IsLocalBuild || AppVeyor.Instance.RepositoryTag,
-                             () => AppVeyor.Instance.RepositoryBranch == "master")
+                             () => AppVeyor.Instance.RepositoryBranch == "master",
+                             () => !string.IsNullOrWhiteSpace(AppVeyor.Instance.RepositoryTagName))
             .Requires(() => DockerUser)
             .Requires(() => DockerPass)
-            .Requires(() => AppVeyor.Instance.RepositoryTagName)
             .WhenSkipped(DependencyBehavior.Skip)
             .DependsOn(BuildDockerImage)
             .Executes(() =>
