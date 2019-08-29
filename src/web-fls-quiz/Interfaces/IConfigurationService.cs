@@ -11,8 +11,11 @@ namespace WebFlsQuiz.Interfaces
         Task<int> GetMailingSmtpPort();
         Task<string> GetDbConnectionString();
         Task<string> GetDbName();
+        Task<string> GetAdminEmail();
+        Task<string> GetAdminEmail(Configuration configuration);
+        Task<string> GetAdminEmailUsingNotConfirmedConfiguration();
         Task<string> GetIsConfigured();
-        bool CheckConfiguration(Configuration configuration);
+        Task<bool> CheckConfiguration(Configuration configuration);
         string SetConfiguration(Configuration configuration);
         bool ConfirmConfiguration(string confirmCode);
         Task<MailSettings> GetMailSettingsUsingNotConfirmedConfiguration();
