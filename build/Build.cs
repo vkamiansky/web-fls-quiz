@@ -64,6 +64,7 @@ namespace Build
             .DependsOn(Restore)
             .DependsOn(MakeBundle)
             .WhenSkipped(DependencyBehavior.Skip)
+            .WhenSkipped(DependencyBehavior.Skip)
             .Executes(() =>
             {
                 DotNetBuild(s => s
@@ -78,6 +79,7 @@ namespace Build
         Target BuildDockerImage => _ => _
             .OnlyWhenDynamic(() => IsLocalBuild || AppVeyor.Instance.RepositoryTag)
             .DependsOn(MakeBundle)
+            .WhenSkipped(DependencyBehavior.Skip)
             .Executes(() =>
             {
                 DockerBuild(x => x
