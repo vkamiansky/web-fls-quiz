@@ -36,7 +36,8 @@ namespace Build
         readonly string DockerImageName = "vkamiansky/flsquiz";
 
         Target ScenarioDetails => _ => _
-            .Before(Compile, PublishDockerImage)
+            .DependentFor(Compile)
+            .DependentFor(PublishDockerImage)
             .Executes(() =>
             {
                 Console.WriteLine(IsLocalBuild ? "Local build." : "Server build.");
@@ -96,8 +97,7 @@ namespace Build
             });
 
         Target BuildDockerImage => _ => _
-            .OnlyWhenDynamic(() => IsLocalBuild || AppVeyor.Instance.RepositoryTag,
-                             () => !string.IsNullOrWhiteSpace(AppVeyor.Instance.RepositoryTagName))
+            .OnlyWhenDynamic(() => IsLocalBuild || AppVeyor.Instance.RepositoryTag)
             .DependsOn(MakeBundle)
             .WhenSkipped(DependencyBehavior.Skip)
             .Executes(() =>
@@ -105,16 +105,16 @@ namespace Build
                 DockerBuild(x => x
                     .SetPath(SourceDirectory / "web-fls-quiz")
                     .SetFile(SourceDirectory / "web-fls-quiz" / "Dockerfile")
-                    .SetTag(DockerImageName + ":" + AppVeyor.Instance.RepositoryTagName)
+                    .SetTag(DockerImageName)
                 );
             });
 
         Target PublishDockerImage => _ => _
             .OnlyWhenDynamic(() => IsLocalBuild || AppVeyor.Instance.RepositoryTag,
-                             () => AppVeyor.Instance.RepositoryBranch == "master",
-                             () => !string.IsNullOrWhiteSpace(DockerUser),
-                             () => !string.IsNullOrWhiteSpace(DockerPass),
-                             () => !string.IsNullOrWhiteSpace(AppVeyor.Instance.RepositoryTagName))
+                             () => AppVeyor.Instance.RepositoryBranch == "master")
+            .Requires(() => DockerUser)
+            .Requires(() => DockerPass)
+            .Requires(() => AppVeyor.Instance.RepositoryTagName)
             .WhenSkipped(DependencyBehavior.Skip)
             .DependsOn(BuildDockerImage)
             .Executes(() =>
