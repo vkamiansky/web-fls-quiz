@@ -15,4 +15,4 @@ build_script:
 - dotnet run --project ./build/_build.csproj Compile
 
 deploy_script:
-- dotnet run --project ./build/_build.csproj PublishDockerImage --DockerUser $env:DOCKER_USER --DockerPass $env:DOCKER_PASS
+- dotnet run --project ./build/_build.csproj PublishDockerImage --docker-user $env:DOCKER_USER --docker-pass $env:DOCKER_PASS
