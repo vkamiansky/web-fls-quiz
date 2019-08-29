@@ -164,5 +164,19 @@ namespace WebFlsQuiz.Data
                 .Select(x => x.Id)
                 .ToArray();
         }
+
+        public async Task<int[]> GetStandardImagesIds(ImageType imageType)
+        {
+            var collection = await GetStandardImagesCollection();
+
+            if (collection == null)
+                return null;
+
+            return collection
+                .AsQueryable()
+                .Where(x => x.ImageType == imageType)
+                .Select(x => x.Id)
+                .ToArray();
+        }
     }
 }

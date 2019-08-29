@@ -25,7 +25,7 @@ namespace WebFlsQuiz.Services
             {
                 if (string.IsNullOrEmpty(image.ImageBase64))
                 {
-                    var standardImagesIds = _dataStorage.GetStandardImagesIds().Result;
+                    var standardImagesIds = _dataStorage.GetStandardImagesIds(ImageType.General).Result;
                     if (standardImagesIds.Length > 0)
                     {
                         var randomIndex = _random.Next(0, standardImagesIds.Length);

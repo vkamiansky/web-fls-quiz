@@ -30,14 +30,14 @@ namespace WebFlsQuiz.Controllers
         {
             var quiz = _dataStorage.GetQuiz(quizName.ToLower());
 
-            _imageService.LoadIfNeeded(quiz.LogoImage);
-            _imageService.LoadIfNeeded(quiz.FinishScreenImage);
-            _imageService.LoadIfNeeded(quiz.IntroScreenImage);
-
             if (quiz != null)
-                return View("Index", quiz);
-            else
-                return View("Index", null);
+            {
+                _imageService.LoadIfNeeded(quiz.LogoImage);
+                _imageService.LoadIfNeeded(quiz.FinishScreenImage);
+                _imageService.LoadIfNeeded(quiz.IntroScreenImage);
+            }
+
+            return View("Index", quiz);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
