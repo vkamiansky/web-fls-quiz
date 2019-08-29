@@ -36,16 +36,14 @@ namespace Build
         readonly string DockerImageName = "vkamiansky/flsquiz";
 
         Target ScenarioDetails => _ => _
-            .DependentFor(Compile)
-            .DependentFor(PublishDockerImage)
             .Executes(() =>
             {
                 Console.WriteLine(IsLocalBuild ? "Local build." : "Server build.");
-                if(!IsLocalBuild)
+                if (!IsLocalBuild)
                 {
                     Console.WriteLine("AppVeyor environment status details:");
                     Console.WriteLine($"Repository branch: {AppVeyor.Instance?.RepositoryBranch}");
-                    if(AppVeyor.Instance.RepositoryTag)
+                    if (AppVeyor.Instance.RepositoryTag)
                     {
                         Console.WriteLine($"Repository tag: {AppVeyor.Instance?.RepositoryTagName}");
                     }
@@ -81,9 +79,7 @@ namespace Build
 
         Target Compile => _ => _
             .OnlyWhenDynamic(() => IsLocalBuild || !AppVeyor.Instance.RepositoryTag)
-            .DependsOn(Restore)
-            .DependsOn(MakeBundle)
-            .WhenSkipped(DependencyBehavior.Skip)
+            .DependsOn(ScenarioDetails, Restore, MakeBundle)
             .WhenSkipped(DependencyBehavior.Skip)
             .Executes(() =>
             {
@@ -98,7 +94,7 @@ namespace Build
 
         Target BuildDockerImage => _ => _
             .OnlyWhenDynamic(() => IsLocalBuild || AppVeyor.Instance.RepositoryTag)
-            .DependsOn(MakeBundle)
+            .DependsOn(ScenarioDetails, MakeBundle)
             .WhenSkipped(DependencyBehavior.Skip)
             .Executes(() =>
             {
@@ -115,8 +111,8 @@ namespace Build
                              () => !string.IsNullOrWhiteSpace(AppVeyor.Instance.RepositoryTagName))
             .Requires(() => DockerUser)
             .Requires(() => DockerPass)
-            .WhenSkipped(DependencyBehavior.Skip)
             .DependsOn(BuildDockerImage)
+            .WhenSkipped(DependencyBehavior.Skip)
             .Executes(() =>
             {
                 DockerLogin(x => x
