@@ -28,6 +28,21 @@ namespace WebFlsQuiz.Services
             _contextAccessor = contextAccessor;
         }
 
+        public async Task<string> GetAdminEmail()
+        {
+            var result = await _configurationService.GetAdminEmail();
+
+            if (!string.IsNullOrEmpty(result))
+                return result;
+
+            result = await _configurationService.GetAdminEmailUsingNotConfirmedConfiguration();
+
+            if (!string.IsNullOrEmpty(result))
+                return result;
+
+            return null;
+        }
+
         private string GetCommitteeMailText(string email, string name, string comment, UserResult result)
         {
             return "Email: " + email + Environment.NewLine
@@ -112,7 +127,9 @@ namespace WebFlsQuiz.Services
                 return false;
             }
 
-            var admin = Environment.GetEnvironmentVariable("ADMIN_EMAIL");
+            var admin = await GetAdminEmail();
+            if (admin == null)
+                return false;
 
             var message = new MimeMessage();
 

@@ -66,7 +66,7 @@ namespace WebFlsQuiz.Controllers
         [NonAction]
         private async Task<bool> TryReconfig(Configuration newConfiguration)
         {
-            if (_configurationService.CheckConfiguration(newConfiguration))
+            if (await _configurationService.CheckConfiguration(newConfiguration))
             {
                 var confirmCode = _configurationService.SetConfiguration(newConfiguration);
                 if (!string.IsNullOrEmpty(confirmCode))

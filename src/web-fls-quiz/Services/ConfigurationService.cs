@@ -41,6 +41,19 @@ namespace WebFlsQuiz.Services
             }
         }
 
+        private async Task<string> ReadSecret(Configuration configuration, string path)
+        {
+            try
+            {
+                Secret<SecretData> secret = await CreateVaultClient(configuration).V1.Secrets.KeyValue.V2.ReadSecretAsync(path);
+                return secret.Data.Data["CURRENT"] as string;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public async Task<MailSettings> GetMailSettings()
         {
             try
@@ -120,6 +133,21 @@ namespace WebFlsQuiz.Services
             return await ReadSecret("mongo_db_name");
         }
 
+        public async Task<string> GetAdminEmail()
+        {
+            return await ReadSecret("admin_email");
+        }
+
+        public async Task<string> GetAdminEmail(Configuration configuration)
+        {
+            return await ReadSecret(configuration, "admin_email");
+        }
+
+        public async Task<string> GetAdminEmailUsingNotConfirmedConfiguration()
+        {
+            return await ReadSecret(_notConfirmedConfiguration.Unprotect(), "admin_email");
+        }
+
         public async Task<string> GetIsConfigured()
         {
             try
@@ -183,18 +211,10 @@ namespace WebFlsQuiz.Services
             return CreateVaultClient(configuration);
         }
 
-        public bool CheckConfiguration(Configuration configuration)
+        public async Task<bool> CheckConfiguration(Configuration configuration)
         {
-            try
-            {
-                var client = CreateVaultClient(configuration.IP, configuration.Port, configuration.Token);
-                var secret = client.V1.Secrets.KeyValue.V2.ReadSecretAsync("check_vault").Result;
-                return (secret.Data.Data["CURRENT"] as string) == "Online";
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            var email = await GetAdminEmail(configuration);
+            return !string.IsNullOrEmpty(email);
         }
 
         public string SetConfiguration(Configuration configuration)
@@ -209,6 +229,8 @@ namespace WebFlsQuiz.Services
             if (string.Equals(confirmCode, _confirmCode))
             {
                 _configuration = _notConfirmedConfiguration;
+                _notConfirmedConfiguration = null;
+                _confirmCode = null;
                 return true;
             }
             return false;
