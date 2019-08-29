@@ -9,32 +9,10 @@ environment:
 image: Ubuntu
 
 before_build:
-- dotnet restore ./build/_build.csproj
+- dotnet build ./build/_build.csproj -v m -c Release
 
 build_script:
-- dotnet build ./build/_build.csproj -v m --no-restore -c Release
-- dotnet run --project ./build/_build.csproj BuildDockerImage
+- dotnet run --project ./build/_build.csproj Compile
 
 deploy_script:
-- ps: >-
-
-    if(("$env:APPVEYOR_REPO_BRANCH" -eq "master") -and ("$env:APPVEYOR_REPO_TAG" -eq $true))
-    {
-        Write-Host "Release deployment scenario. Branch:" $env:APPVEYOR_REPO_BRANCH
-
-        Write-Host "Branch tag:" $env:APPVEYOR_REPO_TAG_NAME
-
-        docker build -t vkamiansky/flsquiz ./src/web-fls-quiz/
-
-        docker login -u $env:DOCKER_USER -p $env:DOCKER_PASS
-
-        docker push vkamiansky/flsquiz:$env:APPVEYOR_REPO_TAG_NAME
-
-        Write-Host "Success"
-    }
-    else
-    {
-        Write-Host "Routine build scenario. Branch:" $env:APPVEYOR_REPO_BRANCH
-    }
-
-    exit 0
+- dotnet run --project ./build/_build.csproj PublishDockerImage --DockerUser $env:DOCKER_USER --DockerPass $env:DOCKER_PASS
