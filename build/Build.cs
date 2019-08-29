@@ -1,3 +1,4 @@
+using System;
 using Nuke.Docker;
 using Nuke.Common;
 using Nuke.Common.Execution;
@@ -33,6 +34,25 @@ namespace Build
         AbsolutePath SourceDirectory => RootDirectory / "src";
 
         readonly string DockerImageName = "vkamiansky/flsquiz";
+
+        Target ScenarioDetails => _ => _
+            .Before(Compile)
+            .Before(PublishDockerImage)
+            .Executes(() =>
+            {
+                Console.WriteLine(IsLocalBuild ? "Local build." : "Server build.");
+                if(!IsLocalBuild)
+                {
+                    Console.WriteLine("AppVeyor environment status details:");
+                    Console.WriteLine($"Repository branch: {AppVeyor.Instance?.RepositoryBranch}");
+                    if(AppVeyor.Instance.RepositoryTag)
+                    {
+                        Console.WriteLine($"Repository tag: {AppVeyor.Instance?.RepositoryTagName}");
+                    }
+                }
+                Console.WriteLine(string.IsNullOrWhiteSpace(DockerUser) ? "(-) Docker user not specified." : "(V) Docker user specified.");
+                Console.WriteLine(string.IsNullOrWhiteSpace(DockerPass) ? "(-) Docker password not specified." : "(V) Docker password specified.");
+            });
 
         Target Clean => _ => _
             .Before(Restore)
@@ -77,7 +97,8 @@ namespace Build
             });
 
         Target BuildDockerImage => _ => _
-            .OnlyWhenDynamic(() => IsLocalBuild || AppVeyor.Instance.RepositoryTag)
+            .OnlyWhenDynamic(() => IsLocalBuild || AppVeyor.Instance.RepositoryTag,
+                             () => !string.IsNullOrWhiteSpace(AppVeyor.Instance.RepositoryTagName))
             .DependsOn(MakeBundle)
             .WhenSkipped(DependencyBehavior.Skip)
             .Executes(() =>
@@ -91,8 +112,10 @@ namespace Build
 
         Target PublishDockerImage => _ => _
             .OnlyWhenDynamic(() => IsLocalBuild || AppVeyor.Instance.RepositoryTag,
+                             () => AppVeyor.Instance.RepositoryBranch == "master",
                              () => !string.IsNullOrWhiteSpace(DockerUser),
-                             () => !string.IsNullOrWhiteSpace(DockerPass))
+                             () => !string.IsNullOrWhiteSpace(DockerPass),
+                             () => !string.IsNullOrWhiteSpace(AppVeyor.Instance.RepositoryTagName))
             .WhenSkipped(DependencyBehavior.Skip)
             .DependsOn(BuildDockerImage)
             .Executes(() =>
