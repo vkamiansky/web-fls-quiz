@@ -11,5 +11,6 @@ namespace WebFlsQuiz.Interfaces
         bool InsertQuizResult(QuizResult quizResult);
         Task<StandardImage> GetStandardImage(int id);
         Task<int[]> GetStandardImagesIds();
+        Task<int[]> GetStandardImagesIds(ImageType imageType);
     }
 }
