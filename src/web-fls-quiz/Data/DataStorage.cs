@@ -120,10 +120,17 @@ namespace WebFlsQuiz.Data
             if (collection == null)
                 return null;
 
-            return collection
-                .AsQueryable()
-                .Where(x => string.Equals(x.Name, quizName))
-                .FirstOrDefault();
+            try
+            {
+                return collection
+                    .AsQueryable()
+                    .Where(x => string.Equals(x.Name, quizName))
+                    .FirstOrDefault();
+            }
+            catch (System.TimeoutException)
+            {
+                return null;
+            }
         }
 
         public bool InsertQuizResult(QuizResult quizResult)
