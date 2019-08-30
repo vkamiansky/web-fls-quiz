@@ -3,6 +3,7 @@ using WebFlsQuiz.Models;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace WebFlsQuiz.Controllers
 {
@@ -28,7 +29,7 @@ namespace WebFlsQuiz.Controllers
         }
 
         [HttpPost]
-        public string SaveResults(string email, string name, string comment, UserAnswer[] userAnswers, string quizName)
+        public async Task<string> SaveResults(string email, string name, string comment, UserAnswer[] userAnswers, string quizName)
         {
             var quizResult = new QuizResult
             {
@@ -38,10 +39,10 @@ namespace WebFlsQuiz.Controllers
                 QuizName = quizName,
                 UserAnswers = userAnswers
             };
-            _dataStorage.InsertQuizResult(quizResult);
+            await _dataStorage.InsertQuizResult(quizResult);
 
-            var results = _questionService.GetUserResult(userAnswers, quizName);
-            _mailService.SendResults(email, name, comment, results, quizName);
+            var results = await _questionService.GetUserResult(userAnswers, quizName);
+            await _mailService.SendResults(email, name, comment, results, quizName);
             return JsonConvert.SerializeObject(new { }, JsonSerializerSettings);
         }
     }

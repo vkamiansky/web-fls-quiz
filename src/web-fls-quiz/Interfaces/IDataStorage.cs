@@ -5,10 +5,10 @@ namespace WebFlsQuiz.Interfaces
 {
     public interface IDataStorage
     {
-        QuestionData GetQuestion(string quizName, int id);
-        QuizInfo GetQuiz(string quizName);
-        int? GetQuestionsNumber(string quizName);
-        bool InsertQuizResult(QuizResult quizResult);
+        Task<QuestionData> GetQuestion(string quizName, int id);
+        Task<QuizInfo> GetQuiz(string quizName);
+        Task<int?> GetQuestionsNumber(string quizName);
+        Task<bool> InsertQuizResult(QuizResult quizResult);
         Task<StandardImage> GetStandardImage(int id);
         Task<int[]> GetStandardImagesIds();
         Task<int[]> GetStandardImagesIds(ImageType imageType);

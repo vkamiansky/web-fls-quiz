@@ -30,9 +30,9 @@ namespace WebFlsQuiz.Data
             _results = new Queue<QuizResult>();
         }
 
-        public QuestionData GetQuestion(string quizName, int id)
+        public async Task<QuestionData> GetQuestion(string quizName, int id)
         {
-            var quiz = GetQuiz(quizName);
+            var quiz = await GetQuiz(quizName);
             if (quiz == null)
                 return null;
 
@@ -42,9 +42,9 @@ namespace WebFlsQuiz.Data
                 .FirstOrDefault();
         }
 
-        public int? GetQuestionsNumber(string quizName)
+        public async Task<int?> GetQuestionsNumber(string quizName)
         {
-            var quiz = GetQuiz(quizName);
+            var quiz = await GetQuiz(quizName);
             if (quiz == null)
                 return null;
 
@@ -53,7 +53,7 @@ namespace WebFlsQuiz.Data
                 .Length;
         }
 
-        public QuizInfo GetQuiz(string quizName)
+        public async Task<QuizInfo> GetQuiz(string quizName)
         {
             var key = _quizzesPrefix + quizName;
 
@@ -61,7 +61,7 @@ namespace WebFlsQuiz.Data
             if (cached)
                 return quiz;
 
-            quiz = _innerDataStorage.GetQuiz(quizName);
+            quiz = await _innerDataStorage.GetQuiz(quizName);
             _memoryCache.Set(key, quiz);
             return quiz;
         }
@@ -89,9 +89,9 @@ namespace WebFlsQuiz.Data
             return _innerDataStorage.GetStandardImagesIds(imageType);
         }
 
-        public bool InsertQuizResult(QuizResult quizResult)
+        public async Task<bool> InsertQuizResult(QuizResult quizResult)
         {
-            var inserted = _innerDataStorage.InsertQuizResult(quizResult);
+            var inserted = await _innerDataStorage.InsertQuizResult(quizResult);
 
             if (!inserted)
                 _results.Enqueue(quizResult);
@@ -99,13 +99,13 @@ namespace WebFlsQuiz.Data
             return true;
         }
 
-        public bool TryInsertResult()
+        public async Task<bool> TryInsertResult()
         {
             var success = _results.TryDequeue(out QuizResult result);
             if (!success)
                 return false;
 
-            success = _innerDataStorage.InsertQuizResult(result);
+            success = await _innerDataStorage.InsertQuizResult(result);
             if (!success)
             {
                 _results.Enqueue(result);

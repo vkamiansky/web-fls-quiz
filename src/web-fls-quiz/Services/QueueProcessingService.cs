@@ -39,11 +39,11 @@ namespace WebFlsQuiz.Services
             return Task.CompletedTask;
         }
 
-        private void HandleResultsQueue(object state)
+        private async void HandleResultsQueue(object state)
         {
             if (_dataStorage != null)
             {
-                while (_dataStorage.TryInsertResult()) ;
+                while (await _dataStorage.TryInsertResult()) ;
             }
         }
     }

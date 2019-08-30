@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using WebFlsQuiz.Interfaces;
+using System.Threading.Tasks;
+using WebFlsQuiz.Common;
 
 namespace WebFlsQuiz.Controllers
 {
@@ -26,9 +28,9 @@ namespace WebFlsQuiz.Controllers
         }
 
         [HttpGet("{quizName}")]
-        public IActionResult Index(string quizName = "java")
+        public async Task<IActionResult> Index(string quizName = "java")
         {
-            var quiz = _dataStorage.GetQuiz(quizName.ToLower());
+            var quiz = await _dataStorage.GetQuiz(quizName.ToLower()).ExecuteWithTimeout(1000);
 
             if (quiz != null)
             {
