@@ -37,6 +37,8 @@ namespace WebFlsQuiz
             services.AddSingleton<IConfigurationService, ConfigurationService>();
             services.AddSingleton<IImageService, ImageService>();
 
+            services.AddHostedService<QueueProcessingService>();
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

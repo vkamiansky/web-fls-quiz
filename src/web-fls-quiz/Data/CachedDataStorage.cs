@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using WebFlsQuiz.Interfaces;
 using WebFlsQuiz.Models;
@@ -18,12 +19,15 @@ namespace WebFlsQuiz.Data
 
         private readonly IMemoryCache _memoryCache;
 
+        private readonly Queue<QuizResult> _results;
+
         public CachedDataStorage(
             IConfigurationService configurationService,
             IMemoryCache memoryCache)
         {
             _innerDataStorage = new DataStorage(configurationService);
             _memoryCache = memoryCache;
+            _results = new Queue<QuizResult>();
         }
 
         public QuestionData GetQuestion(string quizName, int id)
@@ -87,7 +91,28 @@ namespace WebFlsQuiz.Data
 
         public bool InsertQuizResult(QuizResult quizResult)
         {
-            return _innerDataStorage.InsertQuizResult(quizResult);
+            var inserted = _innerDataStorage.InsertQuizResult(quizResult);
+
+            if (!inserted)
+                _results.Enqueue(quizResult);
+
+            return true;
+        }
+
+        public bool TryInsertResult()
+        {
+            var success = _results.TryDequeue(out QuizResult result);
+            if (!success)
+                return false;
+
+            success = _innerDataStorage.InsertQuizResult(result);
+            if (!success)
+            {
+                _results.Enqueue(result);
+                return false;
+            }
+
+            return true;
         }
     }
 }

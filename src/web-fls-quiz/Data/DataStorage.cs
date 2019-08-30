@@ -133,10 +133,16 @@ namespace WebFlsQuiz.Data
             if (collection == null)
                 return false;
 
-            collection
-                .InsertOne(quizResult);
-
-            return true;
+            try
+            {
+                collection
+                    .InsertOne(quizResult);
+                return true;
+            }
+            catch (System.TimeoutException)
+            {
+                return false;
+            }
         }
 
         public async Task<StandardImage> GetStandardImage(int id)
