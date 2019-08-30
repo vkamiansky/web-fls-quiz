@@ -71,7 +71,7 @@ namespace WebFlsQuiz.Services
             // Письмо для участника
             var participantEmailMessage = new MimeMessage();
 
-            var participantMailTemplate = _dataStorage.GetQuiz(quizName).ParticipantMailMessageTemplate;
+            var participantMailTemplate = (await _dataStorage.GetQuiz(quizName)).ParticipantMailMessageTemplate;
 
             participantEmailMessage.From.Add(new MailboxAddress(participantMailTemplate.SenderName, login));
             participantEmailMessage.To.Add(new MailboxAddress(name, email));

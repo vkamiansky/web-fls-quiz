@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace WebFlsQuiz.Controllers
 {
@@ -18,12 +19,12 @@ namespace WebFlsQuiz.Controllers
         }
 
         [HttpPost]
-        public string GetRandom(int[] excludedQuestionsIds, string quizName)
+        public async Task<string> GetRandom(int[] excludedQuestionsIds, string quizName)
         {
             Models.Question question;
             try
             {
-                question = _QuestionService.GetRandom(excludedQuestionsIds, quizName);
+                question = await _QuestionService.GetRandom(excludedQuestionsIds, quizName);
             }
             catch (System.TimeoutException)
             {

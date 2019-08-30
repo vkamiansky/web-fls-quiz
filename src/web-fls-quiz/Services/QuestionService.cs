@@ -2,6 +2,7 @@
 using WebFlsQuiz.Models;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace WebFlsQuiz.Services
 {
@@ -21,14 +22,14 @@ namespace WebFlsQuiz.Services
             _imageService = imageService;
         }
         
-        public Question GetRandom(int[] excludedQuestionIds, string quizName)
+        public async Task<Question> GetRandom(int[] excludedQuestionIds, string quizName)
         {
             var availableIds = Enumerable
-                .Range(1, _dataStorage.GetQuestionsNumber(quizName).Value)
+                .Range(1, (await _dataStorage.GetQuestionsNumber(quizName)).Value)
                 .Except(excludedQuestionIds)
                 .ToArray();
             var nextQuestionIdPosition = _random.Next(0, availableIds.Length);
-            var questionData = _dataStorage.GetQuestion(quizName, availableIds[nextQuestionIdPosition]);
+            var questionData = await _dataStorage.GetQuestion(quizName, availableIds[nextQuestionIdPosition]);
 
             _imageService.LoadIfNeeded(questionData.Image);
 
@@ -49,15 +50,13 @@ namespace WebFlsQuiz.Services
             };
         }
 
-        public UserResult GetUserResult(UserAnswer[] userAnswers, string quizName)
+        public async Task<UserResult> GetUserResult(UserAnswer[] userAnswers, string quizName)
         {
-            return new UserResult
-            {
-                QuestionResults = Array.ConvertAll(
+            var tasks = Array.ConvertAll(
                 userAnswers,
-                x =>
+                x => Task<QuestionData>.Run(async () =>
                 {
-                    var questionData = _dataStorage.GetQuestion(quizName, x.QuestionId);
+                    var questionData = await _dataStorage.GetQuestion(quizName, x.QuestionId);
                     return new QuestionResult
                     {
                         QuestionText = questionData.Text,
@@ -70,7 +69,13 @@ namespace WebFlsQuiz.Services
                                 IsUserChosen = x.AnswerIds.Contains(y.AnswerId)
                             }),
                     };
-                })
+                }));
+                
+            var res = Task.WhenAll(tasks);
+
+            return new UserResult
+            {
+                QuestionResults = await res
             };
         }
     }

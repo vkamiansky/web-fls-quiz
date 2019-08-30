@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
+using System;
 
 namespace WebFlsQuiz.Data
 {
@@ -84,9 +85,9 @@ namespace WebFlsQuiz.Data
 
         #endregion
 
-        public QuestionData GetQuestion(string quizName, int id)
+        public async Task<QuestionData> GetQuestion(string quizName, int id)
         {
-            var collection = GetQuizzesCollection().Result;
+            var collection = await GetQuizzesCollection();
 
             if (collection == null)
                 return null;
@@ -99,9 +100,9 @@ namespace WebFlsQuiz.Data
                 .FirstOrDefault();
         }
 
-        public int? GetQuestionsNumber(string quizName)
+        public async Task<int?> GetQuestionsNumber(string quizName)
         {
-            var collection = GetQuizzesCollection().Result;
+            var collection = await GetQuizzesCollection();
 
             if (collection == null)
                 return null;
@@ -113,30 +114,43 @@ namespace WebFlsQuiz.Data
                 .Count();
         }
 
-        public QuizInfo GetQuiz(string quizName)
+        public async Task<QuizInfo> GetQuiz(string quizName)
         {
-            var collection = GetQuizzesCollection().Result;
+            var collection = await GetQuizzesCollection();
 
             if (collection == null)
                 return null;
 
-            return collection
-                .AsQueryable()
-                .Where(x => string.Equals(x.Name, quizName))
-                .FirstOrDefault();
+            try
+            {
+                return collection
+                    .AsQueryable()
+                    .Where(x => string.Equals(x.Name, quizName))
+                    .FirstOrDefault();
+            }
+            catch (System.TimeoutException)
+            {
+                return null;
+            }
         }
 
-        public bool InsertQuizResult(QuizResult quizResult)
+        public async Task<bool> InsertQuizResult(QuizResult quizResult)
         {
-            var collection = GetQuizResultsCollection().Result;
+            var collection = await GetQuizResultsCollection();
 
             if (collection == null)
                 return false;
 
-            collection
-                .InsertOne(quizResult);
-
-            return true;
+            try
+            {
+                collection
+                    .InsertOne(quizResult);
+                return true;
+            }
+            catch (System.TimeoutException)
+            {
+                return false;
+            }
         }
 
         public async Task<StandardImage> GetStandardImage(int id)

@@ -1,11 +1,12 @@
-﻿using WebFlsQuiz.Models;
+﻿using System.Threading.Tasks;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Interfaces
 {
     public interface IQuestionService
     {
-        Question GetRandom(int[] excludedQuestionIds, string quizName);
+        Task<Question> GetRandom(int[] excludedQuestionIds, string quizName);
 
-        UserResult GetUserResult(UserAnswer[] userAnswers, string quizName);
+        Task<UserResult> GetUserResult(UserAnswer[] userAnswers, string quizName);
     }
 }
