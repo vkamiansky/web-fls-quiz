@@ -33,7 +33,7 @@ namespace WebFlsQuiz
 
             services.AddSingleton<IQuestionService, QuestionService>();
             services.AddSingleton<IMailService, MailService>();
-            services.AddSingleton<IDataStorage, DataStorage>();
+            services.AddSingleton<IDataStorage, CachedDataStorage>();
             services.AddSingleton<IConfigurationService, ConfigurationService>();
             services.AddSingleton<IImageService, ImageService>();
 
