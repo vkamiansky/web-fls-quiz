@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
+using Microsoft.Extensions.Logging;
 
 namespace WebFlsQuiz.Data
 {
@@ -17,9 +18,12 @@ namespace WebFlsQuiz.Data
 
         private const string _standardImagesCollectionName = "StandardImages";
 
-        public DataStorage(IConfigurationService configuration)
+        private readonly ILogger _logger;
+
+        public DataStorage(IConfigurationService configuration, ILoggerFactory loggerFactory)
         {
             _configurationService = configuration;
+            _logger = loggerFactory.CreateLogger("Data Storage");
         }
 
         #region Creating connection and getting access to collections
@@ -40,8 +44,9 @@ namespace WebFlsQuiz.Data
                 var client = new MongoClient(connectionString);
                 return client.GetDatabase(dbName);
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
+                _logger.LogCritical(ex,"Database is broken");
                 return null;
             }
         }
@@ -58,8 +63,9 @@ namespace WebFlsQuiz.Data
             {
                 return database.GetCollection<T>(collectionName);
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
+                _logger.LogCritical(ex,"Collection is broken");
                 return null;
             }
         }

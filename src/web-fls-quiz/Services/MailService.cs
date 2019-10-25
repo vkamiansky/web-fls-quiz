@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace WebFlsQuiz.Services
 {
@@ -18,14 +19,18 @@ namespace WebFlsQuiz.Services
 
         private readonly IHttpContextAccessor _contextAccessor;
 
+        private readonly ILogger _logger;
+
         public MailService(
             IConfigurationService configurationService,
             IDataStorage dataStorage,
-            IHttpContextAccessor contextAccessor)
+            IHttpContextAccessor contextAccessor,
+            ILoggerFactory loggerFactory)
         {
             _configurationService = configurationService;
             _dataStorage = dataStorage;
             _contextAccessor = contextAccessor;
+            _logger = loggerFactory.CreateLogger("Data Storage");
         }
 
         public async Task<string> GetAdminEmail()
