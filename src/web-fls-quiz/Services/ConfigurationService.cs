@@ -8,6 +8,7 @@ using VaultSharp.V1.AuthMethods.Token;
 using VaultSharp.V1.Commons;
 using Microsoft.AspNetCore.DataProtection;
 using WebFlsQuiz.Models;
+using Microsoft.Extensions.Logging;
 
 namespace WebFlsQuiz.Services
 {
@@ -23,9 +24,14 @@ namespace WebFlsQuiz.Services
 
         private Exception _VaultClientError;
 
-        public ConfigurationService(IDataProtectionProvider provider)
+        private readonly ILogger _logger;
+
+        public ConfigurationService(
+            IDataProtectionProvider provider,
+            ILoggerFactory loggerFactory)
         {
             _protectionProvider = provider;
+            _logger = loggerFactory.CreateLogger("Configuration");
         }
 
         private async Task<string> ReadSecret(string path)
@@ -35,8 +41,9 @@ namespace WebFlsQuiz.Services
                 Secret<SecretData> secret = await CreateVaultClient().V1.Secrets.KeyValue.V2.ReadSecretAsync(path);
                 return secret.Data.Data["CURRENT"] as string;
             }
-            catch
+            catch(Exception ex)
             {
+                _logger.LogCritical(ex, "Couldn't read secret");
                 return null;
             }
         }
@@ -48,8 +55,9 @@ namespace WebFlsQuiz.Services
                 Secret<SecretData> secret = await CreateVaultClient(configuration).V1.Secrets.KeyValue.V2.ReadSecretAsync(path);
                 return secret.Data.Data["CURRENT"] as string;
             }
-            catch
+            catch(Exception ex)
             {
+                _logger.LogCritical(ex, "Couldn't read secret");
                 return null;
             }
         }
@@ -61,8 +69,9 @@ namespace WebFlsQuiz.Services
                 var client = CreateVaultClient();
                 return await GetMailSettings(client);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogCritical(ex, "Couldn't get mail settings");
                 return null;
             }
         }
@@ -74,8 +83,9 @@ namespace WebFlsQuiz.Services
                 var client = CreateVaultClientUsingNotConfirmedConfiguration();
                 return await GetMailSettings(client);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogCritical(ex, "Couldn't get mail settings for unconfirmed config");
                 return null;
             }
         }
@@ -97,8 +107,9 @@ namespace WebFlsQuiz.Services
                     Port = int.Parse(port.Data.Data["CURRENT"] as string)
                 };
             }
-            catch
+            catch(Exception ex)
             {
+                _logger.LogCritical(ex, "Couldn't get mail settings");
                 return null;
             }
         }
@@ -183,6 +194,7 @@ namespace WebFlsQuiz.Services
             }
             catch (Exception e)
             {
+                _logger.LogCritical(e, "Couldn't create Vault client");
                 _VaultClientError = e;
                 return null;
             }

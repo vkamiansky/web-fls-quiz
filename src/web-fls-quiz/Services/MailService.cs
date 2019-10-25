@@ -30,7 +30,7 @@ namespace WebFlsQuiz.Services
             _configurationService = configurationService;
             _dataStorage = dataStorage;
             _contextAccessor = contextAccessor;
-            _logger = loggerFactory.CreateLogger("Data Storage");
+            _logger = loggerFactory.CreateLogger("Mail Service");
         }
 
         public async Task<string> GetAdminEmail()
