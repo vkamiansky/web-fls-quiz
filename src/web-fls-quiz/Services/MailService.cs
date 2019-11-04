@@ -5,52 +5,29 @@ using MailKit.Security;
 using MimeKit;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 
 namespace WebFlsQuiz.Services
 {
     public class MailService : IMailService
     {
         private readonly IConfigurationService _configurationService;
-
         private readonly IDataStorage _dataStorage;
-
         private readonly IHttpContextAccessor _contextAccessor;
-
-        private readonly ILogger _logger;
-
         public MailService(
             IConfigurationService configurationService,
             IDataStorage dataStorage,
-            IHttpContextAccessor contextAccessor,
-            ILoggerFactory loggerFactory)
+            IHttpContextAccessor contextAccessor)
         {
             _configurationService = configurationService;
             _dataStorage = dataStorage;
             _contextAccessor = contextAccessor;
-            _logger = loggerFactory.CreateLogger("Mail Service");
         }
-
-        public async Task<string> GetAdminEmail()
+        private IOperationResult<string> GetCommitteeMailText(string email, string name, string comment, UserResult result)
         {
-            var result = await _configurationService.GetAdminEmail();
-
-            if (!string.IsNullOrEmpty(result))
-                return result;
-
-            result = await _configurationService.GetAdminEmailUsingNotConfirmedConfiguration();
-
-            if (!string.IsNullOrEmpty(result))
-                return result;
-
-            return null;
-        }
-
-        private string GetCommitteeMailText(string email, string name, string comment, UserResult result)
-        {
-            return "Email: " + email + Environment.NewLine
+            return OperationResult.Try(() =>
+                OperationResult.Success(
+                    "Email: " + email + Environment.NewLine
                      + "Имя: " + name + Environment.NewLine
                      + "Заметки: " + comment + Environment.NewLine
                      + "Общий результат(%): " + result.PercentUserAnswersCorrect + Environment.NewLine + Environment.NewLine
@@ -63,106 +40,114 @@ namespace WebFlsQuiz.Services
                                     x.AnswerResults.Select(
                                         y => (y.IsCorrect ? "(+)" : "(-)")
                                            + (y.IsUserChosen ? "(v)" : "")
-                                           + y.AnswerText))));
+                                           + y.AnswerText))))));
         }
-
-        public async Task SendResults(string email, string name, string comment, UserResult result, string quizName)
+        public IOperationResult SendResults(string email, string name, string comment, UserResult result, string quizName)
         {
-            var host = await _configurationService.GetMailingSmtpHost();
-            var port = await _configurationService.GetMailingSmtpPort();
-            var login = await _configurationService.GetMailingAccountLogin();
-            var password = await _configurationService.GetMailingAccountPassword();
-
-            // Письмо для участника
-            var participantEmailMessage = new MimeMessage();
-
-            var participantMailTemplate = _dataStorage.GetQuiz(quizName).ParticipantMailMessageTemplate;
-
-            participantEmailMessage.From.Add(new MailboxAddress(participantMailTemplate.SenderName, login));
-            participantEmailMessage.To.Add(new MailboxAddress(name, email));
-            participantEmailMessage.Subject = participantMailTemplate.Subject;
-            participantEmailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html)
+            return OperationResult.All(new Func<IOperationResult<string>>[]{
+                () => OperationResult.Try(() => _configurationService.GetString(ConfigurationKey.SmtpHost)),
+                () => OperationResult.Try(() => _configurationService.GetString(ConfigurationKey.SmtpPort)),
+                () => OperationResult.Try(() => _configurationService.GetString(ConfigurationKey.MailingAccountLogin)),
+                () => OperationResult.Try(() => _configurationService.GetString(ConfigurationKey.MailingAccountPassword))
+            })
+            .Bind(config => OperationResult.Success(new
             {
-                Text = participantMailTemplate.BodyTemplate.Replace("%%name%%", name).Replace("%%percent-correct%%", result.PercentUserAnswersCorrect.ToString()),
-            };
-
-            // Письмо для организаторов
-            var committeeEmailMessage = new MimeMessage();
-
-            committeeEmailMessage.From.Add(new MailboxAddress(participantMailTemplate.SenderName, login));
-            committeeEmailMessage.To.Add(new MailboxAddress(participantMailTemplate.SenderName, login));
-            committeeEmailMessage.Subject = "Результаты " + name;
-            committeeEmailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text)
+                Host = config[0],
+                Port = config[1],
+                Login = config[2],
+                Password = config[3]
+            }))
+            .Bind(mailSettings => OperationResult.Try(() =>
             {
-                Text = GetCommitteeMailText(email, name, comment, result)
-            };
+                return _dataStorage.GetQuiz(quizName)
+                    .Bind(quiz => OperationResult.Success(quiz.ParticipantMailMessageTemplate))
+                    .Bind(template =>
+                    {
+                        return OperationResult.All(new Func<IOperationResult<MimeMessage>>[]{
+                            // Participant message
+                            () =>
+                            {
+                                var message = new MimeMessage();
+                                message.From.Add(new MailboxAddress(template.SenderName, mailSettings.Login));
+                                message.To.Add(new MailboxAddress(name, email));
+                                message.Subject = template.Subject;
+                                message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
+                                {
+                                    Text = template.BodyTemplate.Replace("%%name%%", name).Replace("%%percent-correct%%", result.PercentUserAnswersCorrect.ToString()),
+                                };
+                                return OperationResult.Success(message);
+                            },
+                            // Committee message
+                            () => GetCommitteeMailText(email, name, comment, result)
+                                .Bind(text =>
+                                {
+                                    var message = new MimeMessage();
 
-            using (var client = new SmtpClient())
-            {
-                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                                    message.From.Add(new MailboxAddress(template.SenderName, mailSettings.Login));
+                                    message.To.Add(new MailboxAddress(template.SenderName, mailSettings.Login));
+                                    message.Subject = "Результаты " + name;
+                                    message.Body = new TextPart(MimeKit.Text.TextFormat.Text)
+                                    {
+                                        Text = text
+                                    };
+                                    return OperationResult.Success(message);
+                                })
+                        });
+                    })
+                    .Bind(messages =>
+                    {
+                        using (var client = new SmtpClient())
+                        {
+                            client.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
-                client.Connect(host, port, SecureSocketOptions.SslOnConnect);
-                client.Authenticate(login, password);
-                client.Send(participantEmailMessage);
-                client.Send(committeeEmailMessage);
-                client.Disconnect(true);
-            }
+                            client.Connect(mailSettings.Host, int.Parse(mailSettings.Port), SecureSocketOptions.SslOnConnect);
+                            client.Authenticate(mailSettings.Login, mailSettings.Password);
+                            client.Send(messages[0]);
+                            client.Send(messages[1]);
+                            client.Disconnect(true);
+                            return OperationResult.Success();
+                        }
+                    });
+            }));
         }
-
-        public async Task<bool> SendConfirmCode(string confirmCode, bool useNotConfirmedConfiguration = false)
+        public IOperationResult SendConfirmCode(ConfirmationRequestData data)
         {
-            MailSettings mailSettings;
-            if (useNotConfirmedConfiguration)
+            return OperationResult.Try(() =>
             {
-                mailSettings = await _configurationService.GetMailSettingsUsingNotConfirmedConfiguration();
-            }
-            else
-            {
-                mailSettings = await _configurationService.GetMailSettings();
-            }
+                if (string.IsNullOrEmpty(data.AdminEmail) ||
+                    string.IsNullOrEmpty(data.SmtpHost) ||
+                    string.IsNullOrEmpty(data.SmtpPort) ||
+                    string.IsNullOrEmpty(data.MailingAccountLogin) ||
+                    string.IsNullOrEmpty(data.SmtpPort))
+                    return OperationResult.Failure(new Exception("One of necessary configuration parameters is empty"));
 
-            if (mailSettings == null)
-                return false;
+                var message = new MimeMessage();
 
-            if (string.IsNullOrEmpty(mailSettings.Address) ||
-                string.IsNullOrEmpty(mailSettings.Login) ||
-                string.IsNullOrEmpty(mailSettings.Password) ||
-                mailSettings.Port == 0)
-            {
-                return false;
-            }
+                message.From.Add(new MailboxAddress("Quiz", data.MailingAccountLogin));
+                message.To.Add(new MailboxAddress("Quiz", data.AdminEmail));
+                message.Subject = "An attempt to change configuration";
 
-            var admin = await GetAdminEmail();
-            if (admin == null)
-                return false;
+                var confirmUrl = string.Format("{0}://{1}/Configuration/Confirm?confirmCode={2}",
+                    _contextAccessor.HttpContext.Request.Scheme,
+                    _contextAccessor.HttpContext.Request.Host,
+                    data.ConfirmationCode);
 
-            var message = new MimeMessage();
+                message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
+                {
+                    Text = $"To confirm new configuration visit <a href='{confirmUrl}'>this link</a>"
+                };
 
-            message.From.Add(new MailboxAddress("Quiz", mailSettings.Login));
-            message.To.Add(new MailboxAddress("Quiz", admin));
-            message.Subject = "An attempt to change configuration";
+                using (var client = new SmtpClient())
+                {
+                    client.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
-            var confirmUrl = string.Format("{0}://{1}/Configuration/Confirm?confirmCode={2}",
-                _contextAccessor.HttpContext.Request.Scheme,
-                _contextAccessor.HttpContext.Request.Host,
-                confirmCode);
-
-            message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
-            {
-                Text = $"To confirm new configuration visit <a href='{confirmUrl}'>this link</a>"
-            };
-
-            using (var client = new SmtpClient())
-            {
-                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-
-                client.Connect(mailSettings.Address, mailSettings.Port, SecureSocketOptions.SslOnConnect);
-                client.Authenticate(mailSettings.Login, mailSettings.Password);
-                client.Send(message);
-                client.Disconnect(true);
-            }
-
-            return true;
+                    client.Connect(data.SmtpHost, int.Parse(data.SmtpPort), SecureSocketOptions.SslOnConnect);
+                    client.Authenticate(data.MailingAccountLogin, data.MailingAccountPassword);
+                    client.Send(message);
+                    client.Disconnect(true);
+                    return OperationResult.Success();
+                }
+            });
         }
     }
 }

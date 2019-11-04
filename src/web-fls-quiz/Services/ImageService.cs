@@ -7,33 +7,28 @@ namespace WebFlsQuiz.Services
     public class ImageService : IImageService
     {
         private readonly IDataStorage _dataStorage;
-
         private readonly Random _random = new Random();
-
         public ImageService(IDataStorage dataStorage)
         {
             _dataStorage = dataStorage;
         }
-
-        public void LoadIfNeeded(StandardImage image)
+        public IOperationResult LoadIfNeeded(StandardImage image)
         {
-            if (image.Id != 0)
-            {
-                image.ImageBase64 = _dataStorage.GetStandardImage(image.Id).Result.ImageBase64;
-            }
-            else
-            {
-                if (string.IsNullOrEmpty(image.ImageBase64))
-                {
-                    var standardImagesIds = _dataStorage.GetStandardImagesIds(ImageType.General).Result;
-                    if (standardImagesIds.Length > 0)
+            return (image.Id != 0
+            ? _dataStorage.GetStandardImage(image.Id)
+            : _dataStorage.GetStandardImagesIds(ImageType.General)
+                    .Bind(ids => OperationResult.Try(() =>
                     {
-                        var randomIndex = _random.Next(0, standardImagesIds.Length);
-                        var randomImageId = standardImagesIds[randomIndex];
-                        image.ImageBase64 = _dataStorage.GetStandardImage(randomImageId).Result.ImageBase64;
-                    }
-                }
-            }
+                        if (ids.Length == 0)
+                            return OperationResult.Failure<StandardImage>(new Exception("No images found in collection."));
+                        var randomId = ids[_random.Next(0, ids.Length)];
+                        return _dataStorage.GetStandardImage(randomId);
+                    })))
+                .Bind(storedImage =>
+                {
+                    image.ImageBase64 = storedImage.ImageBase64;
+                    return OperationResult.Success();
+                });
         }
     }
 }

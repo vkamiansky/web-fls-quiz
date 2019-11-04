@@ -2,44 +2,36 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using WebFlsQuiz.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace WebFlsQuiz.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IDataStorage _dataStorage;
-
+        private readonly IQuestionService _questionService;
         private readonly IImageService _imageService;
-
+        private readonly ILogger _logger;
         public HomeController(
-            IDataStorage dataStorage,
-            IImageService imageService)
+            IQuestionService questionService,
+            IImageService imageService,
+            ILoggerFactory loggerFactory)
         {
-            _dataStorage = dataStorage;
+            _questionService = questionService;
             _imageService = imageService;
+            _logger = loggerFactory.CreateLogger("Home");
         }
-
         [HttpHead]
         public IActionResult Head()
         {
             return Ok();
         }
-
         [HttpGet("{quizName}")]
         public IActionResult Index(string quizName = "java")
         {
-            var quiz = _dataStorage.GetQuiz(quizName.ToLower());
-
-            if (quiz != null)
-            {
-                _imageService.LoadIfNeeded(quiz.LogoImage);
-                _imageService.LoadIfNeeded(quiz.FinishScreenImage);
-                _imageService.LoadIfNeeded(quiz.IntroScreenImage);
-            }
-
-            return View("Index", quiz);
+            return _questionService.GetQuizInfo(quizName)
+                .WithLogging(_logger)
+                .ToViewResult(this, "Index");
         }
-
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

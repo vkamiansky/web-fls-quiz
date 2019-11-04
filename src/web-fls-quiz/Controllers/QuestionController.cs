@@ -1,50 +1,38 @@
 ﻿using WebFlsQuiz.Interfaces;
+using WebFlsQuiz.Models;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace WebFlsQuiz.Controllers
 {
     public class QuestionController : Controller
     {
-        private IQuestionService _QuestionService { get; set; }
-
-        private static JsonSerializerSettings JsonSerializerSettings => 
-            new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-
-        public QuestionController(IQuestionService questionService)
+        private readonly IQuestionService _questionService;
+        private readonly ILogger _logger;
+        public QuestionController(
+            IQuestionService questionService,
+            ILoggerFactory loggerFactory)
         {
-            _QuestionService = questionService;
+            _questionService = questionService;
+            _logger = loggerFactory.CreateLogger("Question");
         }
-
         [HttpPost]
-        public string GetRandom(int[] excludedQuestionsIds, string quizName)
+        public IActionResult GetRandom(int[] excludedQuestionsIds, string quizName)
         {
-            Models.Question question;
-            try
+            return _questionService.GetRandom(excludedQuestionsIds, quizName)
+            .Bind(q => new
             {
-                question = _QuestionService.GetRandom(excludedQuestionsIds, quizName);
-            }
-            catch (System.TimeoutException)
-            {
-                // Looks like MongoDB is not responding
-                return null;
-            }
-            catch (MongoDB.Driver.MongoConnectionException)
-            {
-                // Looks like MongoDB is not responding
-                return null;
-            }
-
-            return JsonConvert.SerializeObject(
-                new {
-                    Question = new {
-                        question.Id,
-                        question.ImageBase64,
-                        question.Text,
-                        question.Answers,
-                        question.MultipleAnswer
-                    }}, JsonSerializerSettings);
+                question = new
+                {
+                    id = q.Id,
+                    imageBase64 = q.ImageBase64,
+                    text = q.Text,
+                    answers = q.Answers,
+                    multipleAnswer = q.MultipleAnswer
+                }
+            }.ToResult())
+            .WithLogging(_logger)
+            .ToApiResult();
         }
     }
 }

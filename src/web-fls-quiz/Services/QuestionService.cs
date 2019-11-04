@@ -8,11 +8,8 @@ namespace WebFlsQuiz.Services
     public class QuestionService : IQuestionService
     {
         private Random _random = new Random();
-
         private readonly IDataStorage _dataStorage;
-
         private readonly IImageService _imageService;
-
         public QuestionService(
             IDataStorage dataStorage,
             IImageService imageService)
@@ -20,45 +17,60 @@ namespace WebFlsQuiz.Services
             _dataStorage = dataStorage;
             _imageService = imageService;
         }
-        
-        public Question GetRandom(int[] excludedQuestionIds, string quizName)
+        public IOperationResult<QuizInfo> GetQuizInfo(string quizName)
         {
-            var availableIds = Enumerable
-                .Range(1, _dataStorage.GetQuestionsNumber(quizName).Value)
-                .Except(excludedQuestionIds)
-                .ToArray();
-            var nextQuestionIdPosition = _random.Next(0, availableIds.Length);
-            var questionData = _dataStorage.GetQuestion(quizName, availableIds[nextQuestionIdPosition]);
-
-            _imageService.LoadIfNeeded(questionData.Image);
-
-            return new Question
+            return _dataStorage.GetQuiz(quizName.ToLower())
+            .Bind(quiz =>
             {
-                Id = questionData.Id,
-                ImageBase64 = questionData.Image.ImageBase64,
-                Text = questionData.Text,
-                Answers = Array.ConvertAll(
-                    questionData.Answers,
-                    x => new Answer
-                    {
-                        AnswerId = x.AnswerId,
-                        QuestionId = x.QuestionId,
-                        Text = x.Text
-                    }),
-                MultipleAnswer = questionData.MultipleAnswer
-            };
-        }
-
-        public UserResult GetUserResult(UserAnswer[] userAnswers, string quizName)
-        {
-            return new UserResult
-            {
-                QuestionResults = Array.ConvertAll(
-                userAnswers,
-                x =>
+                return OperationResult.All(new Func<IOperationResult>[]
                 {
-                    var questionData = _dataStorage.GetQuestion(quizName, x.QuestionId);
-                    return new QuestionResult
+                    () => _imageService.LoadIfNeeded(quiz.LogoImage),
+                    () => _imageService.LoadIfNeeded(quiz.FinishScreenImage),
+                    () => _imageService.LoadIfNeeded(quiz.IntroScreenImage)
+                })
+                .Bind(() => quiz.ToResult());
+            });
+        }
+        public IOperationResult<Question> GetRandom(int[] excludedQuestionIds, string quizName)
+        {
+            return _dataStorage.GetQuestionsNumber(quizName)
+                .Bind(numberOfQuestions => OperationResult.Try(() =>
+                    Enumerable.Range(1, numberOfQuestions)
+                        .Except(excludedQuestionIds)
+                        .ToArray()
+                        .ToResult()))
+                .Bind(availableIds =>
+                {
+                    var nextQuestionIdPosition = _random.Next(0, availableIds.Length);
+                    return _dataStorage.GetQuestion(quizName, availableIds[nextQuestionIdPosition]);
+                })
+                .Bind(question => OperationResult.Try(() =>
+                {
+                    _imageService.LoadIfNeeded(question.Image);
+                    return new Question
+                    {
+                        Id = question.Id,
+                        ImageBase64 = question.Image.ImageBase64,
+                        Text = question.Text,
+                        Answers = Array.ConvertAll(
+                            question.Answers,
+                            x => new Answer
+                            {
+                                AnswerId = x.AnswerId,
+                                QuestionId = x.QuestionId,
+                                Text = x.Text
+                            }),
+                        MultipleAnswer = question.MultipleAnswer
+                    }.ToResult();
+                }));
+        }
+        public IOperationResult<UserResult> GetUserResult(UserAnswer[] userAnswers, string quizName)
+        {
+            return OperationResult.Try(() => OperationResult.All(
+                userAnswers.Select<UserAnswer, Func<IOperationResult<QuestionResult>>>(userAnswer => () =>
+                {
+                    return _dataStorage.GetQuestion(quizName, userAnswer.QuestionId).Bind(questionData =>
+                    new QuestionResult
                     {
                         QuestionText = questionData.Text,
                         AnswerResults = Array.ConvertAll(
@@ -67,11 +79,11 @@ namespace WebFlsQuiz.Services
                             {
                                 AnswerText = y.Text,
                                 IsCorrect = y.IsCorrect,
-                                IsUserChosen = x.AnswerIds.Contains(y.AnswerId)
+                                IsUserChosen = userAnswer.AnswerIds.Contains(y.AnswerId)
                             }),
-                    };
-                })
-            };
+                    }.ToResult());
+                })))
+                .Bind(questionResults => new UserResult { QuestionResults = questionResults }.ToResult());
         }
     }
 }
