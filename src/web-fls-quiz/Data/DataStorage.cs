@@ -1,188 +1,112 @@
-﻿using WebFlsQuiz.Interfaces;
-using WebFlsQuiz.Models;
-using MongoDB.Driver;
+﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
-using MongoDB.Bson;
-using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
+using WebFlsQuiz.Interfaces;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Data
 {
     public class DataStorage : IDataStorage
     {
         private readonly IConfigurationService _configurationService;
-
         private const string _quizzesCollectionName = "Quizzes";
-
         private const string _quizResultsCollectionName = "QuizResults";
-
         private const string _standardImagesCollectionName = "StandardImages";
-
-        private readonly ILogger _logger;
-
-        public DataStorage(IConfigurationService configuration, ILoggerFactory loggerFactory)
+        public DataStorage(IConfigurationService configuration)
         {
             _configurationService = configuration;
-            _logger = loggerFactory.CreateLogger("Data Storage");
         }
-
-        #region Creating connection and getting access to collections
-
-        private async Task<IMongoDatabase> GetDatabase()
+        private IOperationResult<IMongoDatabase> GetDatabase()
         {
-            var connectionString = await _configurationService.GetDbConnectionString();
-            var dbName = await _configurationService.GetDbName();
-
-            if (string.IsNullOrEmpty(connectionString) ||
-                string.IsNullOrEmpty(dbName))
+            return OperationResult.All(new Func<IOperationResult<string>>[]{
+                () => OperationResult.Try(() => _configurationService.GetString(ConfigurationKey.DbConnectionString)),
+                () => OperationResult.Try(() => _configurationService.GetString(ConfigurationKey.DbName))
+            })
+            .Bind(config => new
             {
-                return null;
-            }
-
-            try
+                ConnectionString = config[0],
+                DbName = config[1]
+            }.ToResult())
+            .Bind(dbConfig =>
+                    OperationResult.Try(() => new MongoClient(dbConfig.ConnectionString).ToResult())
+                        .Bind(client => OperationResult.Try(() => client.GetDatabase(dbConfig.DbName).ToResult())));
+        }
+        private IOperationResult<IMongoCollection<T>> GetCollection<T>(IMongoDatabase database, string collectionName)
+        {
+            return OperationResult.Try(() => database.GetCollection<T>(collectionName).ToResult());
+        }
+        private IOperationResult<IMongoCollection<QuizInfo>> GetQuizzesCollection()
+        {
+            return GetDatabase().Bind(db => GetCollection<QuizInfo>(db, _quizzesCollectionName));
+        }
+        private IOperationResult<IMongoCollection<QuizResult>> GetQuizResultsCollection()
+        {
+            return GetDatabase().Bind(db => GetCollection<QuizResult>(db, _quizResultsCollectionName));
+        }
+        private IOperationResult<IMongoCollection<StandardImage>> GetStandardImagesCollection()
+        {
+            return GetDatabase().Bind(db => GetCollection<StandardImage>(db, _standardImagesCollectionName));
+        }
+        public IOperationResult<QuestionData> GetQuestion(string quizName, int id)
+        {
+            return GetQuizzesCollection().Bind(collection => OperationResult.Try(() =>
+                collection.AsQueryable()
+                    .Where(x => x.Name == quizName)
+                    .SelectMany(x => x.Questions)
+                    .Where(x => x.Id == id)
+                    .First()
+                    .ToResult()));
+        }
+        public IOperationResult<int> GetQuestionsNumber(string quizName)
+        {
+            return GetQuizzesCollection().Bind(collection => OperationResult.Try(() =>
+                collection.AsQueryable()
+                    .Where(x => x.Name == quizName)
+                    .SelectMany(x => x.Questions)
+                    .Count()
+                    .ToResult()));
+        }
+        public IOperationResult<QuizInfo> GetQuiz(string quizName)
+        {
+            return GetQuizzesCollection().Bind(collection => OperationResult.Try(() =>
+                collection.AsQueryable()
+                    .AsQueryable()
+                    .Where(x => string.Equals(x.Name, quizName))
+                    .First()
+                    .ToResult()));
+        }
+        public IOperationResult InsertQuizResult(QuizResult quizResult)
+        {
+            return GetQuizResultsCollection().Bind(collection => OperationResult.Try(() =>
             {
-                var client = new MongoClient(connectionString);
-                return client.GetDatabase(dbName);
-            }
-            catch (System.Exception ex)
-            {
-                _logger.LogCritical(ex,"Database is broken");
-                return null;
-            }
+                collection.InsertOne(quizResult);
+                return OperationResult.Success();
+            }));
         }
-
-        private IMongoCollection<T> GetCollection<T>(IMongoDatabase database, string collectionName)
+        public IOperationResult<StandardImage> GetStandardImage(int id)
         {
-            if (database == null ||
-                string.IsNullOrEmpty(collectionName))
-            {
-                return null;
-            }
-
-            try
-            {
-                return database.GetCollection<T>(collectionName);
-            }
-            catch (System.Exception ex)
-            {
-                _logger.LogCritical(ex,"Collection is broken");
-                return null;
-            }
+            return GetStandardImagesCollection().Bind(collection => OperationResult.Try(() =>
+                collection.AsQueryable()
+                    .Where(x => x.Id == id)
+                    .First()
+                    .ToResult()));
         }
-
-        private async Task<IMongoCollection<QuizInfo>> GetQuizzesCollection()
+        public IOperationResult<int[]> GetStandardImagesIds()
         {
-            var db = await GetDatabase();
-            return GetCollection<QuizInfo>(db, _quizzesCollectionName);
+            return GetStandardImagesCollection().Bind(collection => OperationResult.Try(() =>
+                collection.AsQueryable()
+                    .Select(x => x.Id)
+                    .ToArray()
+                    .ToResult()));
         }
-
-        private async Task<IMongoCollection<QuizResult>> GetQuizResultsCollection()
+        public IOperationResult<int[]> GetStandardImagesIds(ImageType imageType)
         {
-            var db = await GetDatabase();
-            return GetCollection<QuizResult>(db, _quizResultsCollectionName);
-        }
-
-        private async Task<IMongoCollection<StandardImage>> GetStandardImagesCollection()
-        {
-            var db = await GetDatabase();
-            return GetCollection<StandardImage>(db, _standardImagesCollectionName);
-        }
-
-        #endregion
-
-        public QuestionData GetQuestion(string quizName, int id)
-        {
-            var collection = GetQuizzesCollection().Result;
-
-            if (collection == null)
-                return null;
-
-            return collection
-                .AsQueryable()
-                .Where(x => x.Name == quizName)
-                .SelectMany(x => x.Questions)
-                .Where(x => x.Id == id)
-                .FirstOrDefault();
-        }
-
-        public int? GetQuestionsNumber(string quizName)
-        {
-            var collection = GetQuizzesCollection().Result;
-
-            if (collection == null)
-                return null;
-
-            return collection
-                .AsQueryable()
-                .Where(x => x.Name == quizName)
-                .SelectMany(x => x.Questions)
-                .Count();
-        }
-
-        public QuizInfo GetQuiz(string quizName)
-        {
-            var collection = GetQuizzesCollection().Result;
-
-            if (collection == null)
-                return null;
-
-            return collection
-                .AsQueryable()
-                .Where(x => string.Equals(x.Name, quizName))
-                .FirstOrDefault();
-        }
-
-        public bool InsertQuizResult(QuizResult quizResult)
-        {
-            var collection = GetQuizResultsCollection().Result;
-
-            if (collection == null)
-                return false;
-
-            collection
-                .InsertOne(quizResult);
-
-            return true;
-        }
-
-        public async Task<StandardImage> GetStandardImage(int id)
-        {
-            var collection = await GetStandardImagesCollection();
-
-            if (collection == null)
-                return null;
-
-            return collection
-                .AsQueryable()
-                .Where(x => x.Id == id)
-                .FirstOrDefault();
-        }
-
-        public async Task<int[]> GetStandardImagesIds()
-        {
-            var collection = await GetStandardImagesCollection();
-
-            if (collection == null)
-                return null;
-
-            return collection
-                .AsQueryable()
-                .Select(x => x.Id)
-                .ToArray();
-        }
-
-        public async Task<int[]> GetStandardImagesIds(ImageType imageType)
-        {
-            var collection = await GetStandardImagesCollection();
-
-            if (collection == null)
-                return null;
-
-            return collection
-                .AsQueryable()
-                .Where(x => x.ImageType == imageType)
-                .Select(x => x.Id)
-                .ToArray();
+            return GetStandardImagesCollection().Bind(collection => OperationResult.Try(() =>
+                collection.AsQueryable()
+                    .Where(x => x.ImageType == imageType)
+                    .Select(x => x.Id)
+                    .ToArray()
+                    .ToResult()));
         }
     }
 }

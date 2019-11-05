@@ -1,16 +1,15 @@
-﻿using System.Threading.Tasks;
-using WebFlsQuiz.Models;
+﻿using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Interfaces
 {
     public interface IDataStorage
     {
-        QuestionData GetQuestion(string quizName, int id);
-        QuizInfo GetQuiz(string quizName);
-        int? GetQuestionsNumber(string quizName);
-        bool InsertQuizResult(QuizResult quizResult);
-        Task<StandardImage> GetStandardImage(int id);
-        Task<int[]> GetStandardImagesIds();
-        Task<int[]> GetStandardImagesIds(ImageType imageType);
+        IOperationResult<QuestionData> GetQuestion(string quizName, int id);
+        IOperationResult<int> GetQuestionsNumber(string quizName);
+        IOperationResult<QuizInfo> GetQuiz(string quizName);
+        IOperationResult InsertQuizResult(QuizResult quizResult);
+        IOperationResult<StandardImage> GetStandardImage(int id);
+        IOperationResult<int[]> GetStandardImagesIds();
+        IOperationResult<int[]> GetStandardImagesIds(ImageType imageType);
     }
 }

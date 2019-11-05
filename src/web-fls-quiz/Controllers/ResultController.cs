@@ -1,34 +1,29 @@
-﻿using WebFlsQuiz.Interfaces;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using WebFlsQuiz.Interfaces;
 using WebFlsQuiz.Models;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace WebFlsQuiz.Controllers
 {
     public class ResultController : Controller
     {
         private IQuestionService _questionService { get; set; }
-
         private IMailService _mailService { get; set; }
-
         private IDataStorage _dataStorage { get; set; }
-
-        private static JsonSerializerSettings JsonSerializerSettings =>
-            new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-
+        private readonly ILogger _logger;
         public ResultController(
             IQuestionService questionService,
             IMailService mailService,
-            IDataStorage dataStorage)
+            IDataStorage dataStorage,
+            ILoggerFactory loggerFactory)
         {
             _questionService = questionService;
             _mailService = mailService;
             _dataStorage = dataStorage;
+            _logger = loggerFactory.CreateLogger("Result");
         }
-
         [HttpPost]
-        public string SaveResults(string email, string name, string comment, UserAnswer[] userAnswers, string quizName)
+        public IActionResult SaveResults(string email, string name, string comment, UserAnswer[] userAnswers, string quizName)
         {
             var quizResult = new QuizResult
             {
@@ -38,11 +33,12 @@ namespace WebFlsQuiz.Controllers
                 QuizName = quizName,
                 UserAnswers = userAnswers
             };
-            _dataStorage.InsertQuizResult(quizResult);
-
-            var results = _questionService.GetUserResult(userAnswers, quizName);
-            _mailService.SendResults(email, name, comment, results, quizName);
-            return JsonConvert.SerializeObject(new { }, JsonSerializerSettings);
+            return _dataStorage.InsertQuizResult(quizResult)
+            .Bind(() => _questionService.GetUserResult(userAnswers, quizName))
+            .Bind(results => _mailService.SendResults(email, name, comment, results, quizName))
+            .Bind(() => new { }.ToResult())
+            .WithLogging(_logger)
+            .ToApiResult();
         }
     }
 }

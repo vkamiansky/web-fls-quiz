@@ -1,251 +1,144 @@
-﻿using WebFlsQuiz.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.DataProtection;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.Token;
 using VaultSharp.V1.Commons;
-using Microsoft.AspNetCore.DataProtection;
+using WebFlsQuiz.Interfaces;
 using WebFlsQuiz.Models;
-using Microsoft.Extensions.Logging;
 
 namespace WebFlsQuiz.Services
 {
     public class ConfigurationService : IConfigurationService
     {
-        private readonly IDataProtectionProvider _protectionProvider;
-
-        private ProtectedConfiguration _notConfirmedConfiguration;
-
-        private ProtectedConfiguration _configuration;
-
-        private string _confirmCode;
-
-        private Exception _VaultClientError;
-
-        private readonly ILogger _logger;
-
-        public ConfigurationService(
-            IDataProtectionProvider provider,
-            ILoggerFactory loggerFactory)
+        private const int MINUTES_CONFIRMATION_CODE_VALID = 5;
+        private const int MINUTES_BETWEEN_CONFIGURATION_CHANGE_REQUESTS = 2;
+        private Dictionary<ConfigurationKey, string> _currentProtectedConfiguration = new Dictionary<ConfigurationKey, string>();
+        private Dictionary<ConfigurationKey, string> _candidateProtectedConfiguration = new Dictionary<ConfigurationKey, string>();
+        private IDataProtector _dataProtector;
+        private DateTime? _confirmationCodeIssuedAt;
+        private DateTime? _lastConfigurationChangeRequestAt;
+        private string _confirmationCodeProtected;
+        public ConfigurationService(IDataProtectionProvider provider)
         {
-            _protectionProvider = provider;
-            _logger = loggerFactory.CreateLogger("Configuration");
+            _dataProtector = provider.CreateProtector("Protected Configuration");
         }
-
-        private async Task<string> ReadSecret(string path)
+        public async Task<IOperationResult<ConfirmationRequestData>> ProcessConfigurationChangeRequest(
+            string vaultIp,
+            string vaultPort,
+            string vaultToken)
         {
-            try
-            {
-                Secret<SecretData> secret = await CreateVaultClient().V1.Secrets.KeyValue.V2.ReadSecretAsync(path);
-                return secret.Data.Data["CURRENT"] as string;
-            }
-            catch(Exception ex)
-            {
-                _logger.LogCritical(ex, "Couldn't read secret");
-                return null;
-            }
+            if (_lastConfigurationChangeRequestAt.HasValue
+                    && _lastConfigurationChangeRequestAt.Value.AddMinutes(MINUTES_BETWEEN_CONFIGURATION_CHANGE_REQUESTS) > DateTime.Now)
+                return OperationResult.UserError<ConfirmationRequestData>($"Please, wait. The interval between configuration requests is: {MINUTES_BETWEEN_CONFIGURATION_CHANGE_REQUESTS}");
+            else
+                _lastConfigurationChangeRequestAt = DateTime.Now;
+
+            return await
+                OperationResult
+                    .Try(() => CreateVaultClient(vaultIp, vaultPort, vaultToken))
+                    .BindAsync(async (x) => await ReadConfiguration(x))
+                    .Bind(candidateProtectedConfiguration =>
+                    {
+                        // A new configuration has been read. We set it as a candidate.
+                        _candidateProtectedConfiguration = candidateProtectedConfiguration;
+
+                        // The email is stored in protected form. If it's been set already, we use the current one, otherwise the candidate one
+                        var requestFields = new[]
+                        {
+                            ConfigurationKey.AdminEmail,
+                            ConfigurationKey.SmtpHost,
+                            ConfigurationKey.SmtpPort,
+                            ConfigurationKey.MailingAccountLogin,
+                            ConfigurationKey.MailingAccountPassword
+                        };
+
+                        var actingProtectedConfiguration = _currentProtectedConfiguration.Keys.Intersect(requestFields).Count() == requestFields.Length
+                        ? _currentProtectedConfiguration
+                        : _candidateProtectedConfiguration;
+
+                        // Generate and set the confirmation code parameters
+                        var confirmationCode = Guid.NewGuid().ToString();
+                        _confirmationCodeProtected = _dataProtector.Protect(confirmationCode);
+                        _confirmationCodeIssuedAt = DateTime.Now;
+
+                        var requestData = new ConfirmationRequestData
+                        {
+                            ConfirmationCode = confirmationCode,
+                            AdminEmail = _dataProtector.Unprotect(actingProtectedConfiguration[ConfigurationKey.AdminEmail]),
+                            SmtpHost = _dataProtector.Unprotect(actingProtectedConfiguration[ConfigurationKey.SmtpHost]),
+                            SmtpPort = _dataProtector.Unprotect(actingProtectedConfiguration[ConfigurationKey.SmtpPort]),
+                            MailingAccountLogin = _dataProtector.Unprotect(actingProtectedConfiguration[ConfigurationKey.MailingAccountLogin]),
+                            MailingAccountPassword = _dataProtector.Unprotect(actingProtectedConfiguration[ConfigurationKey.MailingAccountPassword]),
+                        };
+                        return OperationResult.Success(requestData);
+                    });
         }
-
-        private async Task<string> ReadSecret(Configuration configuration, string path)
+        public IOperationResult ConfirmConfigurationChange(string code)
         {
-            try
-            {
-                Secret<SecretData> secret = await CreateVaultClient(configuration).V1.Secrets.KeyValue.V2.ReadSecretAsync(path);
-                return secret.Data.Data["CURRENT"] as string;
-            }
-            catch(Exception ex)
-            {
-                _logger.LogCritical(ex, "Couldn't read secret");
-                return null;
-            }
+            var correctCode = _dataProtector.Unprotect(_confirmationCodeProtected);
+            // Someone is trying to break in
+            if (!_confirmationCodeIssuedAt.HasValue || correctCode != code)
+                return OperationResult.UserError("Wrong code!");
+            // The right person is just too late
+            if (correctCode == code && _confirmationCodeIssuedAt.Value.AddMinutes(MINUTES_CONFIRMATION_CODE_VALID) < DateTime.Now)
+                return OperationResult.UserError("Confirmation code has expired. Please, request another one.");
+            // Let's clear the current configuration
+            _currentProtectedConfiguration = new Dictionary<ConfigurationKey, string>();
+            // Fill it with new protected values
+            foreach (var key in _candidateProtectedConfiguration.Keys)
+                _currentProtectedConfiguration[key] = _candidateProtectedConfiguration[key];
+            _confirmationCodeIssuedAt = null;
+            _candidateProtectedConfiguration = new Dictionary<ConfigurationKey, string>();
+            return OperationResult.Success();
         }
-
-        public async Task<MailSettings> GetMailSettings()
+        public IOperationResult<string> GetString(ConfigurationKey key)
         {
-            try
+            if (_currentProtectedConfiguration.TryGetValue(key, out var protectedResult))
             {
-                var client = CreateVaultClient();
-                return await GetMailSettings(client);
+                var result = _dataProtector.Unprotect(protectedResult);
+                // We disallow blank configuration keys. They breech security.
+                if (string.IsNullOrWhiteSpace(result))
+                    return OperationResult.Failure<string>(new Exception($"Configuration value is blank for key: {key}."));
+                return OperationResult.Success(result);
             }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex, "Couldn't get mail settings");
-                return null;
-            }
+            return OperationResult.Failure<string>(new Exception($"Configuration missing for key: {key}."));
         }
-
-        public async Task<MailSettings> GetMailSettingsUsingNotConfirmedConfiguration()
+        private async Task<IOperationResult<Dictionary<ConfigurationKey, string>>> ReadConfiguration(VaultClient client)
         {
-            try
-            {
-                var client = CreateVaultClientUsingNotConfirmedConfiguration();
-                return await GetMailSettings(client);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex, "Couldn't get mail settings for unconfirmed config");
-                return null;
-            }
-        }
+            var vaultToLocalKeys = new[]
+                {("admin_email", ConfigurationKey.AdminEmail),
+                ("email_login", ConfigurationKey.MailingAccountLogin),
+                ("email_password", ConfigurationKey.MailingAccountPassword),
+                ("smtp_address", ConfigurationKey.SmtpHost),
+                ("smtp_port", ConfigurationKey.SmtpPort),
+                ("mongo_connection_string", ConfigurationKey.DbConnectionString),
+                ("mongo_db_name", ConfigurationKey.DbName)};
 
-        private async Task<MailSettings> GetMailSettings(VaultClient client)
-        {
-            try
+            var res = OperationResult.Success(new Dictionary<ConfigurationKey, string>());
+            foreach (var key in vaultToLocalKeys)
             {
-                Secret<SecretData> login = await client.V1.Secrets.KeyValue.V2.ReadSecretAsync("email_login");
-                Secret<SecretData> password = await client.V1.Secrets.KeyValue.V2.ReadSecretAsync("email_password");
-                Secret<SecretData> address = await client.V1.Secrets.KeyValue.V2.ReadSecretAsync("smtp_address");
-                Secret<SecretData> port = await client.V1.Secrets.KeyValue.V2.ReadSecretAsync("smtp_port");
-
-                return new MailSettings
+                res = await res.Merge(() => ReadSecret(client, key.Item1), (a, x) =>
                 {
-                    Address = address.Data.Data["CURRENT"] as string,
-                    Login = login.Data.Data["CURRENT"] as string,
-                    Password = password.Data.Data["CURRENT"] as string,
-                    Port = int.Parse(port.Data.Data["CURRENT"] as string)
-                };
+                    a[key.Item2] = _dataProtector.Protect(x);
+                    return OperationResult.Success(a);
+                });
             }
-            catch(Exception ex)
-            {
-                _logger.LogCritical(ex, "Couldn't get mail settings");
-                return null;
-            }
+            return res;
         }
-
-        public async Task<string> GetMailingAccountLogin()
+        private IOperationResult<VaultClient> CreateVaultClient(string ip, string port, string token)
         {
-            return await ReadSecret("email_login");
+            IAuthMethodInfo authMethod = new TokenAuthMethodInfo(token);
+            var vaultClientSettings = new VaultClientSettings($"http://{ip}:{port}", authMethod);
+            return OperationResult.Success(new VaultClient(vaultClientSettings));
         }
-
-        public async Task<string> GetMailingAccountPassword()
+        private async Task<IOperationResult<string>> ReadSecret(VaultClient client, string path)
         {
-            return await ReadSecret("email_password");
-        }
-
-        public async Task<string> GetMailingSmtpHost()
-        {
-            return await ReadSecret("smtp_address");
-        }
-
-        public async Task<int> GetMailingSmtpPort()
-        {
-            return int.Parse(await ReadSecret("smtp_port"));
-        }
-
-        public async Task<string> GetDbConnectionString()
-        {
-            return await ReadSecret("mongo_connection_string");
-        }
-
-        public async Task<string> GetDbName()
-        {
-            return await ReadSecret("mongo_db_name");
-        }
-
-        public async Task<string> GetAdminEmail()
-        {
-            return await ReadSecret("admin_email");
-        }
-
-        public async Task<string> GetAdminEmail(Configuration configuration)
-        {
-            return await ReadSecret(configuration, "admin_email");
-        }
-
-        public async Task<string> GetAdminEmailUsingNotConfirmedConfiguration()
-        {
-            return await ReadSecret(_notConfirmedConfiguration.Unprotect(), "admin_email");
-        }
-
-        public async Task<string> GetIsConfigured()
-        {
-            try
-            {
-                var vault = CreateVaultClient();
-
-                Secret<SecretData> smtpAddress = await vault.V1.Secrets.KeyValue.V2.ReadSecretAsync("smtp_address");
-                Secret<SecretData> smtpPort = await vault.V1.Secrets.KeyValue.V2.ReadSecretAsync("smtp_port");
-                Secret<SecretData> emailLogin = await vault.V1.Secrets.KeyValue.V2.ReadSecretAsync("email_login");
-                Secret<SecretData> emailPassword = await vault.V1.Secrets.KeyValue.V2.ReadSecretAsync("email_password");
-                Secret<SecretData> dbConnectionString = await vault.V1.Secrets.KeyValue.V2.ReadSecretAsync("mongo_connection_string");
-                Secret<SecretData> dbName = await vault.V1.Secrets.KeyValue.V2.ReadSecretAsync("mongo_db_name");
-                Secret<SecretData> tracingHost = await vault.V1.Secrets.KeyValue.V2.ReadSecretAsync("jaeger_address");
-                Secret<SecretData> tracingPort = await vault.V1.Secrets.KeyValue.V2.ReadSecretAsync("jaeger_port");
-
-                var configValues = new[] { smtpAddress, smtpPort, emailLogin, emailPassword, dbConnectionString, dbName, tracingHost, tracingPort };
-                var result = configValues.Any(x => !x.Data.Data.ContainsKey("CURRENT"));
-                return result ? "Vault value empty" : string.Empty;
-            }
-            catch (Exception e)
-            {
-                return new String(e.StackTrace + "\n" + _VaultClientError?.StackTrace ?? string.Empty);
-            }
-        }
-
-        private VaultClient CreateVaultClient(string secretIp, string secretPort, string secretToken)
-        {
-            try
-            {
-                IAuthMethodInfo authMethod = new TokenAuthMethodInfo(secretToken);
-                var vaultClientSettings = new VaultClientSettings($"http://{secretIp}:{secretPort}", authMethod);
-                return new VaultClient(vaultClientSettings);
-            }
-            catch (Exception e)
-            {
-                _logger.LogCritical(e, "Couldn't create Vault client");
-                _VaultClientError = e;
-                return null;
-            }
-        }
-
-        private VaultClient CreateVaultClient(Configuration configuration)
-        {
-            return CreateVaultClient(configuration.IP, configuration.Port, configuration.Token);
-        }
-
-        private VaultClient CreateVaultClient()
-        {
-            if (_configuration == null)
-                return null;
-
-            var configuration = _configuration.Unprotect();
-            return CreateVaultClient(configuration);
-        }
-
-        private VaultClient CreateVaultClientUsingNotConfirmedConfiguration()
-        {
-            if (_notConfirmedConfiguration == null)
-                return null;
-
-            var configuration = _notConfirmedConfiguration.Unprotect();
-            return CreateVaultClient(configuration);
-        }
-
-        public async Task<bool> CheckConfiguration(Configuration configuration)
-        {
-            var email = await GetAdminEmail(configuration);
-            return !string.IsNullOrEmpty(email);
-        }
-
-        public string SetConfiguration(Configuration configuration)
-        {
-            _notConfirmedConfiguration = configuration.Protect(_protectionProvider);
-            _confirmCode = Guid.NewGuid().ToString();
-            return _confirmCode;
-        }
-
-        public bool ConfirmConfiguration(string confirmCode)
-        {
-            if (string.Equals(confirmCode, _confirmCode))
-            {
-                _configuration = _notConfirmedConfiguration;
-                _notConfirmedConfiguration = null;
-                _confirmCode = null;
-                return true;
-            }
-            return false;
+            Secret<SecretData> secret = await client.V1.Secrets.KeyValue.V2.ReadSecretAsync(path);
+            return OperationResult.Success(secret.Data.Data["CURRENT"] as string);
         }
     }
 }
