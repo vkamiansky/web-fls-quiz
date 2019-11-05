@@ -83,9 +83,11 @@ namespace WebFlsQuiz.Models
                 return OperationResult.Failure(e);
             }
         }
-        public static IOperationResult<T> ToResult<T>(this T value)
+        public static IOperationResult<T> ToResult<T>(this T value, IOperationResult<T> defaultResult = null)
         {
-            return OperationResult.Success(value);
+            if (defaultResult == null || !object.Equals(value, default(T)))
+                return OperationResult.Success(value);
+            else return defaultResult;
         }
         public static IOperationResult<T> WithLogging<T>(this IOperationResult<T> source, ILogger logger)
         {

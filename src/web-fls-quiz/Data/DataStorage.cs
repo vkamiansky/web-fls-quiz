@@ -70,10 +70,9 @@ namespace WebFlsQuiz.Data
         {
             return GetQuizzesCollection().Bind(collection => OperationResult.Try(() =>
                 collection.AsQueryable()
-                    .AsQueryable()
                     .Where(x => string.Equals(x.Name, quizName))
-                    .First()
-                    .ToResult()));
+                    .FirstOrDefault()
+                    .ToResult(OperationResult.UserError<QuizInfo>("Quiz not found."))));
         }
         public IOperationResult InsertQuizResult(QuizResult quizResult)
         {
