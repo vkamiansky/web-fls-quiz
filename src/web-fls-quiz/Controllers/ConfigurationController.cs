@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using WebFlsQuiz.Interfaces;
@@ -32,7 +31,6 @@ namespace WebFlsQuiz.Controllers
                 .WithLogging(_logger)
                 .ToApiResult();
         }
-
         [HttpGet]
         public IActionResult Confirm(string confirmCode)
         {

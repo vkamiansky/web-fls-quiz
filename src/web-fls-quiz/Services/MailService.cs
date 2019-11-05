@@ -1,11 +1,11 @@
-﻿using WebFlsQuiz.Interfaces;
-using WebFlsQuiz.Models;
+﻿using System;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
-using System;
-using System.Linq;
-using Microsoft.AspNetCore.Http;
+using WebFlsQuiz.Interfaces;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Services
 {

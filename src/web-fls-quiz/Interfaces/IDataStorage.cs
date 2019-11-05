@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using WebFlsQuiz.Models;
+﻿using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Interfaces
 {

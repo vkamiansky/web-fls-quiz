@@ -1,7 +1,7 @@
-﻿using WebFlsQuiz.Interfaces;
-using WebFlsQuiz.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using WebFlsQuiz.Interfaces;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Controllers
 {
@@ -20,15 +20,15 @@ namespace WebFlsQuiz.Controllers
         public IActionResult GetRandom(int[] excludedQuestionsIds, string quizName)
         {
             return _questionService.GetRandom(excludedQuestionsIds, quizName)
-            .Bind(q => new
+            .Bind(question => new
             {
-                question = new
+                Question = new
                 {
-                    id = q.Id,
-                    imageBase64 = q.ImageBase64,
-                    text = q.Text,
-                    answers = q.Answers,
-                    multipleAnswer = q.MultipleAnswer
+                    Id = question.Id,
+                    ImageBase64 = question.ImageBase64,
+                    Text = question.Text,
+                    Answers = question.Answers,
+                    MultipleAnswer = question.MultipleAnswer
                 }
             }.ToResult())
             .WithLogging(_logger)

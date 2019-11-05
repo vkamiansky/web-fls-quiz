@@ -1,8 +1,8 @@
-﻿using WebFlsQuiz.Interfaces;
-using WebFlsQuiz.Models;
-using MongoDB.Driver;
+﻿using System;
 using System.Linq;
-using System;
+using MongoDB.Driver;
+using WebFlsQuiz.Interfaces;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Data
 {
@@ -57,7 +57,6 @@ namespace WebFlsQuiz.Data
                     .First()
                     .ToResult()));
         }
-
         public IOperationResult<int> GetQuestionsNumber(string quizName)
         {
             return GetQuizzesCollection().Bind(collection => OperationResult.Try(() =>
@@ -67,7 +66,6 @@ namespace WebFlsQuiz.Data
                     .Count()
                     .ToResult()));
         }
-
         public IOperationResult<QuizInfo> GetQuiz(string quizName)
         {
             return GetQuizzesCollection().Bind(collection => OperationResult.Try(() =>
@@ -77,7 +75,6 @@ namespace WebFlsQuiz.Data
                     .First()
                     .ToResult()));
         }
-
         public IOperationResult InsertQuizResult(QuizResult quizResult)
         {
             return GetQuizResultsCollection().Bind(collection => OperationResult.Try(() =>
@@ -86,7 +83,6 @@ namespace WebFlsQuiz.Data
                 return OperationResult.Success();
             }));
         }
-
         public IOperationResult<StandardImage> GetStandardImage(int id)
         {
             return GetStandardImagesCollection().Bind(collection => OperationResult.Try(() =>
@@ -95,7 +91,6 @@ namespace WebFlsQuiz.Data
                     .First()
                     .ToResult()));
         }
-
         public IOperationResult<int[]> GetStandardImagesIds()
         {
             return GetStandardImagesCollection().Bind(collection => OperationResult.Try(() =>
@@ -104,7 +99,6 @@ namespace WebFlsQuiz.Data
                     .ToArray()
                     .ToResult()));
         }
-
         public IOperationResult<int[]> GetStandardImagesIds(ImageType imageType)
         {
             return GetStandardImagesCollection().Bind(collection => OperationResult.Try(() =>

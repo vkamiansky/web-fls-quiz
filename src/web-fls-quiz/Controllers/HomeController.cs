@@ -1,8 +1,8 @@
-﻿using WebFlsQuiz.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using WebFlsQuiz.Interfaces;
-using Microsoft.Extensions.Logging;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Controllers
 {

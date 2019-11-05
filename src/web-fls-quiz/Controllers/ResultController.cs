@@ -1,9 +1,7 @@
-﻿using WebFlsQuiz.Interfaces;
-using WebFlsQuiz.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using WebFlsQuiz.Interfaces;
+using WebFlsQuiz.Models;
 
 namespace WebFlsQuiz.Controllers
 {
@@ -24,7 +22,6 @@ namespace WebFlsQuiz.Controllers
             _dataStorage = dataStorage;
             _logger = loggerFactory.CreateLogger("Result");
         }
-
         [HttpPost]
         public IActionResult SaveResults(string email, string name, string comment, UserAnswer[] userAnswers, string quizName)
         {
