@@ -101,7 +101,7 @@ namespace Build
                 DockerBuild(x => x
                     .SetPath(SourceDirectory / "web-fls-quiz")
                     .SetFile(SourceDirectory / "web-fls-quiz" / "Dockerfile")
-                    .SetTag(DockerImageName)
+                    .SetTag(DockerImageName + ":" + AppVeyor.Instance.RepositoryTagName)
                 );
             });
 
