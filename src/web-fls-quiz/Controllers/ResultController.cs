@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using WebFlsQuiz.Interfaces;
 using WebFlsQuiz.Models;
@@ -27,6 +28,7 @@ namespace WebFlsQuiz.Controllers
         {
             var quizResult = new QuizResult
             {
+                SubmittedAt = DateTime.Now,
                 Comment = comment,
                 Email = email,
                 Name = name,
