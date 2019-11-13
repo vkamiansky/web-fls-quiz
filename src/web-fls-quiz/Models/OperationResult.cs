@@ -94,7 +94,7 @@ namespace WebFlsQuiz.Models
             switch (source)
             {
                 case OperationResult.FailureResult<T> failure:
-                    logger.LogCritical(failure.Exception.Message);
+                    logger.LogCritical($"Error message: {failure.Exception.Message}, Stack trace: {failure.Exception.StackTrace}");
                     return source;
                 default: return source;
             }
@@ -104,7 +104,7 @@ namespace WebFlsQuiz.Models
             switch (source)
             {
                 case OperationResult.FailureResult failure:
-                    logger.LogCritical(failure.Exception.Message);
+                    logger.LogCritical($"Error message: {failure.Exception.Message}, Stack trace: {failure.Exception.StackTrace}");
                     return source;
                 default: return source;
             }
